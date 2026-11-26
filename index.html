@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LinTech UI prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: a shipped staff web app, recreated from the LinTech Figma file (UI v1.1)
+   IDEA: CPU Waterlab's own screens, clickable, with mock data
+   PICTURE: each screen itself
+   COLOUR and TYPE: Figma variables (CPU navy + gold), Inter
+   LAYOUT: 248px navy sidebar, 77px top bar, card grid; stacks on narrow screens */
+:root{color-scheme:light;
+--primary:#262a7a;--primary-dark:#191c55;--primary-soft:#e9eaf7;--bg:#f5f6fa;--surface:#fff;--sidebar:#161a4d;--sidebar-text:#bcc0e0;
+--border:#e1e3ee;--text:#111433;--muted:#5e6382;--danger:#dc2626;--danger-soft:#fee2e2;--success:#15803d;--success-soft:#dcfce7;
+--warning:#b45309;--warning-soft:#fef3c7;--info:#2457c5;--info-soft:#e0e9fb;--violet:#6d28d9;--violet-soft:#ede9fe;--slate:#475569;--slate-soft:#e2e8f0;
+--accent:#f2b705;--accent-soft:#fff5cf;--accent-dark:#8a6400}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow-x:clip}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:inherit}
+.seal{display:block;border-radius:50%;object-fit:contain}
+/* app shell */
+.app{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:100vh;position:relative}
+.app::before{content:"";position:fixed;left:0;right:0;top:0;height:4px;background:var(--accent);z-index:30}
+.side{background:var(--sidebar);padding:28px 16px 80px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.brand{display:flex;gap:10px;align-items:center;padding-left:8px;margin-bottom:28px}
+.brand b{display:block;color:#fff;font-size:16px;line-height:20px}
+.brand small{display:block;color:var(--sidebar-text);font-size:11px}
+.nav{display:flex;flex-direction:column;gap:4px}
+.nav a{display:flex;align-items:center;gap:10px;height:38px;padding:0 12px;border-radius:8px;color:var(--sidebar-text);font-weight:500;text-decoration:none;cursor:pointer}
+.nav a:hover{background:rgba(255,255,255,.07);color:#fff}
+.nav a.on{background:var(--accent);color:var(--sidebar);font-weight:600}
+.nav svg{width:18px;height:18px;flex:none}
+.main{display:flex;flex-direction:column;min-height:100vh}
+.top{background:var(--surface);border-bottom:1px solid var(--border);min-height:77px;padding:14px 32px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.top .crumb{font-size:12px;color:var(--muted)}
+.top h1{margin:0;font-size:22px;line-height:28px;font-weight:700}
+.who{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.user{display:flex;align-items:center;gap:10px}
+.av{width:35px;height:33px;border-radius:50%;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;font-size:12px;font-weight:700}
+.user b{display:block;font-size:13px;font-weight:600}.user small{display:block;font-size:11px;color:var(--muted)}
+.content{padding:24px 32px 96px;display:flex;flex-direction:column;gap:20px}
+/* components */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:37px;padding:0 16px;border-radius:8px;border:1px solid transparent;font-weight:600;font-size:14px;cursor:pointer;white-space:nowrap;text-decoration:none;background:none}
+.btn:focus-visible,.nav a:focus-visible,input:focus-visible,.seg button:focus-visible,.tile:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn.primary{background:var(--primary);color:#fff}.btn.primary:hover{background:var(--primary-dark)}
+.btn.secondary{background:#fff;border-color:var(--border);color:var(--text);height:39px}.btn.secondary:hover{background:var(--bg)}
+.btn.danger{background:var(--danger);color:#fff}
+.btn.ghost{color:var(--primary);padding:0 12px}.btn.ghost:hover{background:var(--primary-soft)}
+.btn.block{width:100%}
+.btn[disabled]{opacity:.55;cursor:default}
+.badge{display:inline-flex;align-items:center;gap:6px;height:23px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.b-pending{background:var(--slate-soft);color:var(--slate)}.b-testing{background:var(--info-soft);color:var(--info)}
+.b-verif{background:var(--warning-soft);color:var(--warning)}.b-ready{background:var(--violet-soft);color:var(--violet)}.b-released{background:var(--success-soft);color:var(--success)}
+.pill{display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.pill.ok{background:var(--success-soft);color:var(--success)}.pill.off{background:var(--slate-soft);color:var(--slate)}.pill.bad{background:var(--danger-soft);color:var(--danger)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:21px}
+.card h2{margin:0;font-size:16px;font-weight:600;line-height:20px}
+.chead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.chead .meta{font-size:13px;color:var(--muted)}
+.grid{display:grid;gap:20px;align-content:start}
+.g2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.split{display:grid;gap:20px;align-items:start}
+.row{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+.right{display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap}
+.stat .l{font-size:13px;color:var(--muted)}.stat .n{font-size:30px;font-weight:700;line-height:40px;margin:2px 0 8px}.stat .s{font-size:12px;color:var(--muted)}
+.field{display:flex;flex-direction:column;gap:6px}
+.row>.field{flex:1 1 160px}
+.field label{font-size:13px;font-weight:500}
+.field input,.field select,.field textarea{height:39px;border:1px solid var(--border);border-radius:8px;background:#fff;padding:0 12px;font-size:14px;width:100%}
+.field textarea{height:auto;padding:10px 12px;resize:vertical}
+.field input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+.field.err input{border-color:var(--danger)}
+.field.dis input{background:var(--bg);color:var(--muted)}
+.field .help{font-size:12px;color:var(--muted)}.field.err .help{color:var(--danger)}
+.field .help.chg{color:var(--warning)}
+.banner{display:flex;gap:10px;align-items:flex-start;border-radius:8px;padding:11px 14px;font-size:13px;line-height:18px}
+.banner::before{content:"";flex:none;width:6px;height:6px;border-radius:50%;background:currentColor;margin-top:6px}
+.banner.info{background:var(--info-soft);color:var(--info)}.banner.danger{background:var(--danger-soft);color:var(--danger)}
+.banner.warn{background:var(--warning-soft);color:var(--warning)}.banner.ok{background:var(--success-soft);color:var(--success)}
+.banner b{display:block}.banner small{display:block;font-size:12px}
+.tw{border:1px solid var(--border);border-radius:8px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{background:var(--bg);text-align:left;font-size:12px;font-weight:500;color:var(--muted);padding:10px 16px;white-space:nowrap}
+td{padding:13px 16px;border-top:1px solid var(--border);vertical-align:middle}
+td.num,th.num{text-align:right;white-space:nowrap}
+td.nw{white-space:nowrap}
+tr.click{cursor:pointer}tr.click:hover td{background:#fafbfe}
+tr.sel td{background:var(--primary-soft)}
+tr.sec td{background:var(--primary-soft);color:var(--primary);font-size:11px;font-weight:700;padding:7px 16px;letter-spacing:.02em}
+tr.bad td{background:#fff5f5}
+tr.tot td{font-weight:700;background:var(--bg)}
+td input{height:34px;border:1px solid var(--border);border-radius:8px;padding:0 10px;width:100%;min-width:90px;background:#fff}
+td input.bad{border-color:var(--danger);background:var(--danger-soft);color:var(--danger)}
+.flag{display:inline-block;margin-top:4px;font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px}
+.flag.hi{background:var(--danger-soft);color:var(--danger)}.flag.ok{background:var(--success-soft);color:var(--success)}
+.kv{display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:5px 0}
+.kv span:first-child{color:var(--muted)}.kv span:last-child{text-align:right;font-weight:500}
+.hr{border-top:1px solid var(--border);margin:8px 0}
+.facts{display:flex;flex-wrap:wrap;gap:16px 44px}
+.facts div span{display:block;font-size:12px;color:var(--muted)}.facts div b{font-size:14px;font-weight:600}
+.seg{display:inline-flex;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:4px;gap:4px;flex-wrap:wrap}
+.seg button{border:0;background:none;border-radius:7px;height:32px;padding:0 14px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer}
+.seg button.on{background:#fff;color:var(--text);font-weight:600;box-shadow:0 1px 2px rgba(17,20,51,.12)}
+.chk{display:flex;align-items:center;gap:10px;min-height:30px;cursor:pointer;font-size:14px}
+.chk input{width:18px;height:18px;accent-color:var(--primary);margin:0;flex:none}
+.chk .p{margin-left:auto;color:var(--muted);white-space:nowrap}
+.cap{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.02em;margin:14px 0 6px}
+.note{font-size:12px;color:var(--muted)}
+.total{display:flex;justify-content:space-between;align-items:center;padding:8px 0}
+.total b{font-size:15px}.total strong{font-size:22px;color:var(--primary);white-space:nowrap}
+.stepper{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.step{display:flex;align-items:center;gap:8px;height:31px;padding:0 12px;border-radius:999px;font-size:13px;color:var(--muted)}
+.step i{font-style:normal;width:22px;height:19px;border-radius:999px;display:grid;place-items:center;font-size:11px;font-weight:700;background:var(--slate-soft)}
+.step.on{background:var(--primary-soft);color:var(--text);font-weight:600}.step.on i,.step.done i{background:var(--primary);color:#fff}
+.step.done{color:var(--text)}
+.stepper .ln{width:36px;height:1px;background:var(--border)}
+.sugg{border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:0 6px 18px rgba(17,20,51,.08);margin-top:14px}
+.sugg .h{background:var(--bg);font-size:12px;color:var(--muted);padding:8px 14px}
+.sitem{display:flex;align-items:center;gap:16px;padding:10px 14px;border-top:1px solid var(--border);flex-wrap:wrap}
+.sitem.on{background:var(--primary-soft)}
+.sitem .t{flex:1 1 220px}.sitem b{display:block;font-weight:600}.sitem small{color:var(--muted);font-size:12px}
+.sitem .m{font-size:12px;color:var(--muted);white-space:nowrap}
+.mini{border:1px solid var(--border);border-radius:8px;padding:10px 12px;cursor:pointer;background:#fff;text-align:left}
+.mini b{display:block;font-size:13px;font-weight:600}.mini small{font-size:12px;color:var(--muted)}
+.tl{list-style:none;margin:0;padding:0}
+.tl li{position:relative;padding:0 0 14px 26px}
+.tl li::before{content:"";position:absolute;left:3px;top:5px;width:10px;height:10px;border-radius:50%;background:var(--primary)}
+.tl li::after{content:"";position:absolute;left:7px;top:17px;bottom:0;width:2px;background:var(--border)}
+.tl li:last-child::after{display:none}
+.tl li.gold::before{background:var(--accent)}.tl li.todo::before{background:var(--slate-soft)}
+.tl b{display:block;font-size:14px;font-weight:600}.tl li.todo b{font-weight:500;color:var(--muted)}.tl small{font-size:12px;color:var(--muted)}
+/* paper documents */
+.paper{background:#fff;max-width:820px;width:100%;margin:0 auto;padding:44px 48px;box-shadow:0 8px 30px rgba(17,20,51,.12);border-radius:2px;font-size:13px}
+.paper .hd{text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;margin-bottom:18px}
+.paper .hd h3{margin:8px 0 0;font-size:16px;font-weight:700}.paper .hd h4{margin:4px 0 0;font-size:13px;font-weight:700}
+.paper .hd p{margin:2px 0;font-size:11px;color:var(--muted)}
+.paper .ttl{color:var(--primary);font-weight:700;font-size:14px;margin-top:8px}
+.paper .mf{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:4px 40px;margin-bottom:16px}
+.paper .mf div{font-size:12px}.paper .mf span{color:var(--muted)}.paper .mf b{font-weight:600}
+.paper table{font-size:12px}.paper td{padding:9px 12px}.paper th{padding:9px 12px;white-space:normal}
+.sig{display:flex;justify-content:space-between;gap:40px;margin-top:20px;flex-wrap:wrap}
+.sig div{min-width:220px}.sig .ln{border-bottom:1px solid var(--text);height:30px;margin:6px 0 6px}
+.sig b{display:block;font-size:13px}.sig small{color:var(--muted);font-size:12px}
+.nf{text-align:center;letter-spacing:.35em;font-size:11px;color:var(--muted);margin:14px 0}
+.receipt{background:#fff;border:1px solid var(--border);border-radius:12px;padding:28px}
+.receipt .hd{text-align:center;display:flex;flex-direction:column;align-items:center;gap:3px;margin-bottom:12px}
+.receipt .hd b{font-size:13px}.receipt .hd small{font-size:10px;color:var(--muted)}
+.receipt .hd .rt{font-size:15px;color:var(--primary);font-weight:700;margin-top:6px}
+/* label */
+.label{border:2px dashed var(--muted);border-radius:8px;padding:18px 20px;display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+.label .lt{flex:1 1 320px;display:flex;flex-direction:column;gap:8px}
+.label .lh{display:flex;justify-content:space-between;font-size:10px;font-weight:600;color:var(--muted)}
+.label .rq{font-size:26px;font-weight:700;line-height:30px}
+.label .ln{font-size:13px;color:var(--primary);font-weight:600}
+.chip{display:inline-block;background:var(--primary-soft);color:var(--primary);font-size:11px;font-weight:600;padding:4px 8px;border-radius:6px;margin-right:6px}
+.qr{text-align:center;font-size:10px;color:var(--muted)}
+.qr svg{width:110px;height:110px;display:block;margin-bottom:4px}
+/* sign in */
+.signin{display:grid;grid-template-columns:minmax(0,620fr) minmax(0,820fr);min-height:100vh}
+.bp{background:var(--sidebar);color:#fff;padding:64px;display:flex;flex-direction:column;justify-content:center;gap:20px}
+.bp h1{font-size:40px;line-height:46px;margin:0;font-weight:700;max-width:492px}
+.bp .gold{width:64px;height:3px;background:var(--accent)}
+.bp p{margin:0;color:var(--sidebar-text);font-size:16px;max-width:492px}
+.bp .motto{color:var(--accent);font-size:12px;font-weight:600;letter-spacing:.12em}
+.sf{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;gap:22px}
+.sc{background:#fff;border:1px solid var(--border);border-radius:14px;padding:32px;width:100%;max-width:420px;display:flex;flex-direction:column;gap:16px}
+.sc h2{margin:0;font-size:24px}.sc p{margin:-8px 0 0;color:var(--muted);font-size:13px}
+.shortcuts{text-align:center}.shortcuts small{display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:8px}
+.shortcuts .right{justify-content:center;gap:8px}
+/* index */
+.index{max-width:1328px;margin:0 auto;padding:48px 24px 80px}
+.ihero{background:var(--sidebar);border-radius:14px;padding:28px 32px;display:flex;align-items:center;gap:20px;color:#fff;margin-bottom:32px}
+.ihero h1{margin:0;font-size:26px}.ihero p{margin:4px 0 0;color:var(--sidebar-text);font-size:13px}
+.igroup{margin-bottom:28px}.igroup h2{font-size:12px;font-weight:700;color:var(--primary);margin:0 0 12px}
+.igroup.st h2{color:var(--accent-dark)}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.tile{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px 16px;text-decoration:none;font-weight:600;font-size:13px;cursor:pointer}
+.tile:hover{border-color:var(--primary);box-shadow:0 4px 12px rgba(38,42,122,.1)}
+.tile i{font-style:normal;background:var(--primary-soft);color:var(--primary);border-radius:6px;padding:3px 7px;font-size:12px;font-weight:700;min-width:34px;text-align:center}
+.igroup.st .tile i{background:var(--accent-soft);color:var(--accent-dark)}
+.allbtn{position:fixed;left:16px;bottom:16px;z-index:40;display:inline-flex;align-items:center;gap:8px;height:33px;padding:0 15px;border-radius:999px;background:#fff;color:var(--primary);font-size:12px;font-weight:700;border:1px solid var(--border);box-shadow:0 2px 10px rgba(0,0,0,.18);cursor:pointer;text-decoration:none}
+/* overlays */
+.overlay{position:fixed;inset:0;background:rgba(17,20,51,.45);display:grid;place-items:center;z-index:50;padding:16px}
+.modal{background:#fff;border-radius:14px;padding:26px;width:100%;max-width:440px;box-shadow:0 20px 50px rgba(0,0,0,.25);display:flex;flex-direction:column;gap:14px}
+.modal h3{margin:0;font-size:18px}.modal p{margin:0;font-size:13px;color:var(--muted)}
+.modal .box{background:var(--bg);border-radius:8px;padding:8px 12px}
+.toast{position:fixed;right:32px;bottom:28px;z-index:60;background:var(--sidebar);color:#fff;border-radius:10px;padding:11px 16px;font-size:13px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.25);display:flex;gap:14px;align-items:center;max-width:min(420px,calc(100vw - 40px))}
+.toast.err{background:var(--danger)}
+.toast a{color:#fff;font-weight:700;text-decoration:underline;cursor:pointer}
+.sk{height:10px;border-radius:6px;background:linear-gradient(90deg,#eceef5 25%,#f6f7fb 50%,#eceef5 75%);background-size:200% 100%;animation:sh 1.3s infinite linear}
+.sk.p{height:16px;border-radius:999px;width:70px}
+@keyframes sh{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.sk{animation:none}}
+.empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:44px 20px}
+.empty .ic{width:56px;height:56px;border-radius:50%;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center}
+.empty h3{margin:4px 0 0;font-size:18px}.empty p{margin:0;max-width:460px;color:var(--muted);font-size:13px}
+.errcard{max-width:520px;margin:120px auto 0;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px;padding:40px}
+.errcard .ic{width:48px;height:48px;border-radius:50%;background:var(--danger-soft);color:var(--danger);display:grid;place-items:center;font-weight:800;font-size:20px}
+.errcard h2{font-size:20px}.errcard p{margin:0;color:var(--muted);font-size:14px}
+.msg{background:var(--bg);border-radius:8px;padding:12px 14px;font-size:13px}
+.opt{display:flex;gap:12px;border:1px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;align-items:flex-start}
+.opt.on{border-color:var(--primary);background:var(--primary-soft)}
+.opt input{width:18px;height:18px;accent-color:var(--primary);margin:2px 0 0}
+.opt b{display:block;font-size:14px}.opt small{font-size:12px;color:var(--muted)}
+.mtx td{text-align:center}.mtx td:first-child{text-align:left}
+.yes{color:var(--success);font-weight:700}.q{color:var(--danger);font-weight:700}.no{color:var(--muted)}
+@media (max-width:1100px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:900px){.split,.g2,.g3{grid-template-columns:minmax(0,1fr)!important}.signin{grid-template-columns:1fr}.bp{padding:40px 24px}.bp h1{font-size:30px;line-height:36px}}
+@media (max-width:760px){.app{grid-template-columns:1fr}.side{position:static;height:auto;padding:20px 12px}.nav{flex-direction:row;flex-wrap:wrap}.nav a{height:34px}.brand{margin-bottom:14px}
+.top,.content{padding-left:16px;padding-right:16px}.paper{padding:24px 18px}.paper .mf{grid-template-columns:1fr}.tiles,.g4{grid-template-columns:minmax(0,1fr)}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<a class="allbtn" href="#index" id="allbtn">☰ All screens</a>
+<div id="layer"></div>
+<script>
+{
+const SEAL='data:image/png;base64,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';
+const P='fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
+const IC={
+dashboard:'<path d="M3 2.25H6.75C7.16 2.25 7.5 2.59 7.5 3V8.25C7.5 8.66 7.16 9 6.75 9H3C2.59 9 2.25 8.66 2.25 8.25V3C2.25 2.59 2.59 2.25 3 2.25Z"/><path d="M11.25 2.25H15C15.41 2.25 15.75 2.59 15.75 3V5.25C15.75 5.66 15.41 6 15 6H11.25C10.84 6 10.5 5.66 10.5 5.25V3C10.5 2.59 10.84 2.25 11.25 2.25Z"/><path d="M11.25 9H15C15.41 9 15.75 9.34 15.75 9.75V15C15.75 15.41 15.41 15.75 15 15.75H11.25C10.84 15.75 10.5 15.41 10.5 15V9.75C10.5 9.34 10.84 9 11.25 9Z"/><path d="M3 12H6.75C7.16 12 7.5 12.34 7.5 12.75V15C7.5 15.41 7.16 15.75 6.75 15.75H3C2.59 15.75 2.25 15.41 2.25 15V12.75C2.25 12.34 2.59 12 3 12Z"/>',
+users:'<path d="M12 15.75V14.25C12 13.45 11.68 12.69 11.12 12.13C10.56 11.57 9.8 11.25 9 11.25H4.5C3.7 11.25 2.94 11.57 2.38 12.13C1.82 12.69 1.5 13.45 1.5 14.25V15.75"/><circle cx="6.75" cy="5.25" r="3"/><path d="M16.5 15.75V14.25C16.5 13.59 16.28 12.94 15.87 12.41C15.46 11.89 14.89 11.51 14.25 11.35"/><path d="M12 2.35C12.65 2.51 13.22 2.89 13.63 3.41C14.03 3.94 14.26 4.59 14.26 5.25C14.26 5.92 14.03 6.57 13.63 7.09C13.22 7.62 12.65 7.99 12 8.16"/>',
+'file-plus':'<path d="M11.25 1.5H4.5C4.1 1.5 3.72 1.66 3.44 1.94C3.16 2.22 3 2.6 3 3V15C3 15.4 3.16 15.78 3.44 16.06C3.72 16.34 4.1 16.5 4.5 16.5H13.5C13.9 16.5 14.28 16.34 14.56 16.06C14.84 15.78 15 15.4 15 15V5.25L11.25 1.5Z"/><path d="M10.5 1.5V4.5C10.5 4.9 10.66 5.28 10.94 5.56C11.22 5.84 11.6 6 12 6H15"/><path d="M6.75 11.25H11.25"/><path d="M9 13.5V9"/>',
+receipt:'<path d="M3 1.5V16.5L4.5 15.75L6 16.5L7.5 15.75L9 16.5L10.5 15.75L12 16.5L13.5 15.75L15 16.5V1.5L13.5 2.25L12 1.5L10.5 2.25L9 1.5L7.5 2.25L6 1.5L4.5 2.25L3 1.5Z"/><path d="M12 6H7.5C7.1 6 6.72 6.16 6.44 6.44C6.16 6.72 6 7.1 6 7.5C6 7.9 6.16 8.28 6.44 8.56C6.72 8.84 7.1 9 7.5 9H10.5C10.9 9 11.28 9.16 11.56 9.44C11.84 9.72 12 10.1 12 10.5C12 10.9 11.84 11.28 11.56 11.56C11.28 11.84 10.9 12 10.5 12H6"/><path d="M9 13.13V4.88"/>',
+tag:'<path d="M9.44 1.94C9.16 1.66 8.78 1.5 8.38 1.5H3C2.6 1.5 2.22 1.66 1.94 1.94C1.66 2.22 1.5 2.6 1.5 3V8.38C1.5 8.78 1.66 9.16 1.94 9.44L8.47 15.97C8.81 16.31 9.27 16.5 9.75 16.5C10.23 16.5 10.69 16.31 11.03 15.97L15.97 11.03C16.31 10.69 16.5 10.23 16.5 9.75C16.5 9.27 16.31 8.81 15.97 8.47L9.44 1.94Z"/><circle cx="5.63" cy="5.63" r="1.13"/>',
+'package-check':'<path d="M12 12L13.5 13.5L16.5 10.5"/><path d="M15.75 7.5V6C15.75 5.74 15.68 5.48 15.55 5.25C15.42 5.02 15.23 4.83 15 4.7L9.75 1.7C9.52 1.57 9.26 1.5 9 1.5C8.74 1.5 8.48 1.57 8.25 1.7L3 4.7C2.77 4.83 2.58 5.02 2.45 5.25C2.32 5.48 2.25 5.74 2.25 6V12C2.25 12.26 2.32 12.52 2.45 12.75C2.58 12.98 2.77 13.17 3 13.3L8.25 16.3C8.48 16.43 8.74 16.5 9 16.5C9.26 16.5 9.52 16.43 9.75 16.3L11.25 15.44"/><path d="M5.63 3.2L12.38 7.07"/><path d="M2.47 5.25L9 9L15.53 5.25"/><path d="M9 16.5V9"/>',
+search:'<circle cx="8.25" cy="8.25" r="6"/><path d="M15.75 15.75L12.53 12.53"/>',
+'clipboard-list':'<rect x="6" y="1.5" width="6" height="3" rx=".75"/><path d="M12 3H13.5C13.9 3 14.28 3.16 14.56 3.44C14.84 3.72 15 4.1 15 4.5V15C15 15.4 14.84 15.78 14.56 16.06C14.28 16.34 13.9 16.5 13.5 16.5H4.5C4.1 16.5 3.72 16.34 3.44 16.06C3.16 15.78 3 15.4 3 15V4.5C3 4.1 3.16 3.72 3.44 3.44C3.72 3.16 4.1 3 4.5 3H6"/><path d="M9 8.25H12"/><path d="M9 12H12"/><path d="M6 8.25H6.01"/><path d="M6 12H6.01"/>',
+flask:'<path d="M7.5 1.5V7.15C7.5 7.38 7.45 7.61 7.34 7.82L3.54 15.41C3.48 15.53 3.45 15.65 3.46 15.78C3.47 15.91 3.5 16.04 3.57 16.15C3.64 16.25 3.73 16.34 3.85 16.41C3.96 16.47 4.09 16.5 4.21 16.5H13.79C13.91 16.5 14.04 16.47 14.15 16.41C14.27 16.34 14.36 16.25 14.43 16.15C14.5 16.04 14.53 15.91 14.54 15.78C14.55 15.65 14.52 15.53 14.46 15.41L10.66 7.82C10.55 7.61 10.5 7.38 10.5 7.15V1.5"/><path d="M6.38 1.5H11.63"/><path d="M5.25 12H12.75"/>',
+'shield-check':'<path d="M15 9.75C15 13.5 12.38 15.38 9.26 16.46C9.09 16.52 8.91 16.52 8.75 16.46C5.63 15.38 3 13.5 3 9.75V4.5C3 4.3 3.08 4.11 3.22 3.97C3.36 3.83 3.55 3.75 3.75 3.75C5.25 3.75 7.13 2.85 8.43 1.71C8.59 1.57 8.79 1.5 9 1.5C9.21 1.5 9.41 1.57 9.57 1.71C10.88 2.86 12.75 3.75 14.25 3.75C14.45 3.75 14.64 3.83 14.78 3.97C14.92 4.11 15 4.3 15 4.5V9.75Z"/><path d="M6.75 9L8.25 10.5L11.25 7.5"/>',
+'bar-chart':'<path d="M2.25 2.25V15.75H15.75"/><path d="M13.5 12.75V6.75"/><path d="M9.75 12.75V3.75"/><path d="M6 12.75V10.5"/>',
+history:'<path d="M2.25 9C2.25 10.34 2.65 11.64 3.39 12.75C4.13 13.86 5.18 14.73 6.42 15.24C7.65 15.75 9.01 15.88 10.32 15.62C11.63 15.36 12.83 14.72 13.77 13.77C14.72 12.83 15.36 11.63 15.62 10.32C15.88 9.01 15.75 7.65 15.24 6.42C14.73 5.18 13.86 4.13 12.75 3.39C11.64 2.65 10.34 2.25 9 2.25C7.11 2.26 5.3 2.99 3.95 4.31L2.25 6"/><path d="M2.25 2.25V6H6"/><path d="M9 5.25V9L12 10.5"/>',
+'square-pen':'<path d="M9 2.25H3.75C3.35 2.25 2.97 2.41 2.69 2.69C2.41 2.97 2.25 3.35 2.25 3.75V14.25C2.25 14.65 2.41 15.03 2.69 15.31C2.97 15.59 3.35 15.75 3.75 15.75H14.25C14.65 15.75 15.03 15.59 15.31 15.31C15.59 15.03 15.75 14.65 15.75 14.25V9"/><path d="M13.78 1.97C14.08 1.67 14.48 1.5 14.91 1.5C15.33 1.5 15.73 1.67 16.03 1.97C16.33 2.27 16.5 2.67 16.5 3.09C16.5 3.52 16.33 3.92 16.03 4.22L9.27 10.98C9.09 11.16 8.87 11.29 8.63 11.36L6.48 11.99C6.41 12.01 6.34 12.01 6.28 11.99C6.21 11.97 6.15 11.94 6.11 11.89C6.06 11.85 6.03 11.79 6.01 11.72C5.99 11.66 5.99 11.59 6.01 11.52L6.64 9.37C6.71 9.13 6.84 8.91 7.02 8.73L13.78 1.97Z"/>',
+'user-cog':'<circle cx="13.5" cy="11.25" r="2.25"/><circle cx="6.75" cy="5.25" r="3"/><path d="M7.5 11.25H4.5C3.7 11.25 2.94 11.57 2.38 12.13C1.82 12.69 1.5 13.45 1.5 14.25V15.75"/><path d="M16.28 12.3L15.6 12.08"/><path d="M11.4 10.43L10.73 10.2"/><path d="M12.45 14.03L12.68 13.35"/><path d="M14.33 9.15L14.55 8.48"/><path d="M14.7 14.03L14.4 13.28"/><path d="M12.6 9.23L12.3 8.48"/><path d="M10.73 12.45L11.48 12.15"/><path d="M15.53 10.35L16.28 10.05"/>'
+};
+const icon=(k,s=18)=>`<svg viewBox="0 0 18 18" width="${s}" height="${s}" ${P}>${IC[k]}</svg>`;
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const peso=n=>'₱'+n.toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+/* roles, people, navigation */
+const NAV={
+rec:[['dashboard','Dashboard','10'],['users','Customers','11'],['file-plus','New Sample Request','12a'],['receipt','Payments & Receipts','13'],['tag','Sample Labels','14'],['package-check','Release Results','15'],['search','Records Search','02']],
+lab:[['clipboard-list','My Worklist','20'],['flask','Result Entry','21'],['search','Records Search','25']],
+admin:[['dashboard','Dashboard','30'],['shield-check','Verification Queue','30'],['search','Records Search','37'],['bar-chart','Income Reports','32'],['history','Audit Log','33'],['square-pen','Edit Records','34'],['user-cog','Users & Roles','35']]};
+const WHO={rec:['MS','Maria Santos','Receiving Personnel'],lab:['PG','Paolo Garcia','Laboratory Personnel · Phys/Chem'],labb:['LR','Liza Ramos','Laboratory Personnel · Bacteriological'],admin:['AR','Ana Reyes','Administrator']};
+
+const go=id=>`data-go="${id}"`;
+const btn=(t,k='primary',a='',x='')=>`<button class="btn ${k} ${x}" ${a}>${t}</button>`;
+const B={Pending:'b-pending','Under Testing':'b-testing','For Verification':'b-verif','Ready for Release':'b-ready',Released:'b-released'};
+const badge=s=>`<span class="badge ${B[s]}">${s}</span>`;
+const field=(l,v='',o={})=>`<div class="field ${o.st||''}" ${o.style?`style="${o.style}"`:''}><label>${l}</label>${o.area?`<textarea rows="2">${esc(v)}</textarea>`:`<input ${o.id?`id="${o.id}"`:''} value="${esc(v)}" ${o.st==='dis'?'disabled':''} ${o.ph?`placeholder="${esc(o.ph)}"`:''} ${o.type?`type="${o.type}"`:''}>`}${o.help?`<span class="help ${o.hc||''}" ${o.hid?`id="${o.hid}"`:''}>${o.help}</span>`:''}</div>`;
+const card=(t,body,right='',cls='')=>`<section class="card ${cls}">${t?`<div class="chead"><h2>${t}</h2>${right}</div>`:''}${body}</section>`;
+const kv=(a,b)=>`<div class="kv"><span>${a}</span><span>${b}</span></div>`;
+const banner=(k,h)=>`<div class="banner ${k}"><div>${h}</div></div>`;
+const table=(heads,rows,cls='')=>`<div class="tw"><table class="${cls}"><thead><tr>${heads.map(h=>`<th class="${/^(Tests|Income|Unit price|Requests|Total|Physical\/Chemical|Bacteriological)$/.test(h)&&cls.includes('fin')?'num':''}">${h}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
+const facts=a=>`<div class="facts">${a.map(([k,v])=>`<div><span>${k}</span><b>${v}</b></div>`).join('')}</div>`;
+const seg=(opts,on,attr='')=>`<div class="seg" ${attr}>${opts.map((o,i)=>`<button class="${i===on?'on':''}" ${Array.isArray(o)?go(o[1]):''}>${Array.isArray(o)?o[0]:o}</button>`).join('')}</div>`;
+
+function shell(role,active,crumb,title,body,extra=''){
+  const w=WHO[role]; const navRole=role==='labb'?'lab':role;
+  const nav=NAV[navRole].map(([i,l,t])=>`<a class="${l===active?'on':''}" ${go(t)} tabindex="0">${icon(i)}<span>${l}</span></a>`).join('');
+  return `<div class="app"><aside class="side"><div class="brand"><img class="seal" src="${SEAL}" width="38" height="38" alt="CPU seal"><div><b>CPU Waterlab</b><small>Digital Management System</small></div></div><nav class="nav">${nav}</nav></aside>
+  <div class="main"><header class="top"><div><div class="crumb">${crumb}</div><h1>${title}</h1></div><div class="who">${extra}<div class="user"><div class="av">${w[0]}</div><div><b>${w[1]}</b><small>${w[2]}</small></div></div>${btn('Sign out','ghost',go('00'))}</div></header>
+  <main class="content">${body}</main></div></div>`;
+}
+
+/* mock data */
+const SEARCH=[['REQ-2026-0142','Juan Dela Cruz','2026-11-25','Phys/Chem + Bacteriological','Under Testing'],['REQ-2026-0131','Juan Dela Cruz','2026-11-18','Bacteriological','Ready for Release'],['REQ-2026-0117','Dela Cruz Farms Inc.','2026-11-09','Physical/Chemical','For Verification'],['REQ-2026-0098','Juan Dela Cruz','2026-10-27','Physical/Chemical','Released'],['REQ-2026-0090','Dela Cruz Farms Inc.','2026-10-20','Phys/Chem + Bacteriological','Released'],['REQ-2026-0086','Rosa Dela Cruz','2026-10-14','Bacteriological','Pending']];
+const TODAY=[['REQ-2026-0147','Riverside Water Association','Deep well #2','Bacteriological','Unpaid','Pending'],['REQ-2026-0146','Juan Dela Cruz','Kitchen faucet','Physical/Chemical','Paid','Pending'],['REQ-2026-0145','Northside Ice Plant','Storage tank','Phys/Chem + Bacteriological','Paid','Under Testing'],['REQ-2026-0144','Ana Lim','Refilling station','Bacteriological','Paid','Under Testing'],['REQ-2026-0141','Hillside Resort','Pool inlet','Physical/Chemical','Paid','Ready for Release']];
+const PARAMS=[['pH',50,1],['Color',50,0],['Dissolved Oxygen',160,0],['Total Solids / TDS',160,1],['Alkalinity',120,0],['Acidity',120,0],['Total Hardness',200,1],['Chloride',170,1],['Conductivity',50,0],['Turbidity',120,1],['Calcium',250,0],['Magnesium',350,0]];
+const REQ={pc:true,bact:true,sel:new Set(PARAMS.filter(p=>p[2]).map(p=>p[0])),own:'Private'};
+const RECEIPT_ITEMS=[['pH',50],['Turbidity',120],['Total Solids / TDS',160],['Total Hardness',200],['Chloride',170],['Bacteriological Test (with colony count)',600]];
+const READY=[['REQ-2026-0131','Juan Dela Cruz','2026-11-24','Bacteriological','2026-11-24 15:20'],['REQ-2026-0141','Hillside Resort','2026-11-25','Physical/Chemical','2026-11-25 14:05'],['REQ-2026-0128','Northside Ice Plant','2026-11-22','Phys/Chem + Bacteriological','2026-11-22 11:40'],['REQ-2026-0125','Ana Lim','2026-11-21','Bacteriological','2026-11-21 16:12'],['REQ-2026-0119','Riverside Water Association','2026-11-20','Physical/Chemical','2026-11-20 09:55']];
+const ST={rel:0,released:new Set(),label:false,notify:false,audit:'All',pcSeg:0,wlSeg:0,result:{Color:'NIL',Turbidity:'7.8','Total Hardness':'',pH:'6.65','Total Solids / TDS':'11.1'}};
+
+function searchScreen(role,active){
+  const rows=SEARCH.map(r=>`<tr class="click" ${go('16')}><td class="nw"><b>${r[0]}</b></td><td>${r[1]}</td><td class="nw">${r[2]}</td><td>${r[3]}</td><td>${badge(r[4])}</td><td class="num">${btn('View','ghost',go('16'))}</td></tr>`);
+  return shell(role,active,'Records','Search requests and results',
+   card('',`<div class="row">${field('Customer name, customer ID or request ID','Dela Cruz',{style:'flex:3 1 260px'})}${field('Test type','All types  ▾')}${field('From','2026-10-01')}${field('To','2026-11-26')}${btn('Search','primary','data-act="search"')}</div>`)+
+   card('Results',table(['Request ID','Customer','Date received','Test type','Status',''],rows),'<span class="meta">6 matches · 0.4 s</span>'));
+}
+function resultEntry(failed){
+  const R=ST.result, def=[['PHYSICAL'],['Color','TCU','5 TCU','Platinum-Cobalt','Required',null],['Turbidity','NTU','5 NTU','Turbidimeter','Re-tested 2×, same value',5],['CHEMICAL'],['Total Hardness','mg/L','300 mg/L','EDTA Titration','Required',300],['pH','—','6.5 – 8.5','Glass Electrode','Required','ph'],['Total Solids / TDS','ppm','500 mg/L','Gravimetric / TDS meter','Required',500]];
+  const rows=def.map(d=>{ if(d.length===1) return `<tr class="sec"><td colspan="6">${d[0]}</td></tr>`;
+    const v=R[d[0]]; const n=parseFloat(v); let flag='',bad=false;
+    if(v===''){bad=true}else if(d[5]==='ph'&&!isNaN(n)){flag=(n>=6.5&&n<=8.5)?'<span class="flag ok">✓ Within limit</span>':'<span class="flag hi">▲ Outside PNSDW limit</span>';bad=!(n>=6.5&&n<=8.5)}
+    else if(typeof d[5]==='number'&&!isNaN(n)&&n>d[5]){flag='<span class="flag hi">▲ Above PNSDW limit</span>';bad=true}
+    return `<tr class="${bad&&v!==''?'bad':''}"><td class="nw">${d[0]}</td><td style="min-width:150px"><input data-res="${d[0]}" value="${esc(v)}" placeholder="Required" class="${bad?'bad':''}">${flag?'<br>'+flag:''}</td><td>${d[1]}</td><td class="nw" style="${bad&&v!==''?'color:var(--danger);font-weight:600':'color:var(--muted)'}">${d[2]}</td><td style="color:var(--muted)">${d[3]}</td><td><input value="${d[4]==='Required'?'':esc(d[4])}" placeholder="Required"></td></tr>`;});
+  const missing=Object.keys(R).filter(k=>R[k].trim()==='');
+  const out=[];const t=parseFloat(R.Turbidity);if(t>5)out.push(`Turbidity ${R.Turbidity} NTU (limit 5 NTU)`);const h=parseFloat(R['Total Hardness']);if(h>300)out.push(`Total Hardness ${h} mg/L (limit 300 mg/L)`);const ph=parseFloat(R.pH);if(!isNaN(ph)&&(ph<6.5||ph>8.5))out.push(`pH ${ph} (limit 6.5 – 8.5)`);const td=parseFloat(R['Total Solids / TDS']);if(td>500)out.push(`Total Solids / TDS ${td} ppm (limit 500 mg/L)`);
+  const done=5-missing.length;
+  return shell('lab','Result Entry','Laboratory Personnel / My worklist','Result entry · Physical/Chemical',
+   (failed?`<div class="banner danger" style="align-items:center"><div style="flex:1"><b>Couldn't save your results. Nothing you typed was lost.</b><small>The server did not respond (error 503 at 10:42 AM). Your entries are still on this page. Try again, or keep working and save later.</small></div>${btn('Try again','danger',go('21'))}</div>`:'')+
+   card('',facts([['Request ID','REQ-2026-0145'],['Laboratory No.','26-674'],['Source','Product'],['Date / time collected','2026-11-26 06:30 AM'],['Date submitted','2026-11-26 08:20 AM'],['Status',badge('Under Testing')]]))+
+   (missing.length?banner('danger',`${missing.length} required ${missing.length>1?'entries are':'entry is'} missing: ${missing.join(', ')}. Fill ${missing.length>1?'them':'it'} in before submitting for verification.`):'')+
+   (out.length?banner('danger',`<b>${out.length} result${out.length>1?'s are':' is'} outside the PNSDW limit: ${out.join('; ')}.</b><small>You can still submit. The analysis form will mark it "Not within standard" for the Administrator to review.</small>`):'')+
+   card('Results',table(['Parameter','Result *','Unit','PNSDW standard','Method','Remarks'],rows),'<span class="meta">Type the final value. Standards and methods come from the parameter catalog.</span>')+
+   card('Parameter check (FR-025/026)',banner(missing.length?'warn':'ok',missing.length?`${done} of 5 requested parameters have results. Missing: ${missing.join(', ')}. No unrequested parameters.`:'All 5 requested parameters have results. No unrequested parameters.'))+
+   `<div class="right">${btn('Save draft','secondary',failed?'data-act="savefail"':'data-act="draft"')}${btn('Preview analysis form','secondary',go('23'))}${btn('Submit for verification','primary','data-act="submitpc"')}</div>`);
+}
+function dashboard(){
+  const rows=TODAY.map(r=>`<tr class="click" ${go('16')}><td class="nw"><b>${r[0]}</b></td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${badge(r[5])}</td></tr>`);
+  const st=(l,n,s,c)=>`<section class="card stat"><div class="l">${l}</div><div class="n" style="color:${c}">${n}</div><div class="s">${s}</div></section>`;
+  return shell('rec','Dashboard','Receiving Personnel','Good morning, Maria',
+   `<div class="grid g4">${st('Requests today',8,'3 from returning customers','var(--text)')}${st('Awaiting payment',2,'₱3,450.00 total','var(--warning)')}${st('Ready for Release',5,'Waiting for customers to claim','var(--violet)')}${st('Released today',3,'Recipient names recorded','var(--success)')}</div>`+
+   card("Today's requests",table(['Request ID','Customer','Sampling point','Test type','Payment','Status'],rows),btn('Open records search','ghost',go('02'))),
+   btn('+ New sample request','primary',go('12a')));
+}
+function reqTotal(){let t=0;const items=[];if(REQ.pc)PARAMS.forEach(p=>{if(REQ.sel.has(p[0])){t+=p[1];items.push([p[0],p[1]])}});if(REQ.bact){t+=600;items.push(['Bacteriological Test (with colony count)',600])}return[t,items]}
+function paperHead(lines){return `<div class="hd"><img class="seal" src="${SEAL}" width="64" height="64" alt="CPU seal">${lines}</div>`}
+function qr(){const n=25;let c='';let s=7;const r=()=>{s=(s*9301+49297)%233280;return s/233280};
+  const fin=(x,y)=>`<rect x="${x}" y="${y}" width="7" height="7" fill="#111433"/><rect x="${x+1}" y="${y+1}" width="5" height="5" fill="#fff"/><rect x="${x+2}" y="${y+2}" width="3" height="3" fill="#111433"/>`;
+  for(let y=0;y<n;y++)for(let x=0;x<n;x++){const inF=(x<8&&y<8)||(x>16&&y<8)||(x<8&&y>16);if(!inF&&r()>.52)c+=`<rect x="${x}" y="${y}" width="1" height="1"/>`}
+  return `<svg viewBox="0 0 25 25" shape-rendering="crispEdges"><rect width="25" height="25" fill="#fff"/><g fill="#111433">${c}</g>${fin(0,0)}${fin(18,0)}${fin(0,18)}</svg>`}
+
+const S={
+'index':{t:'Screen index',r:()=>{
+  const G=[['SHARED · 3 screens',[['00','Sign in'],['01','Access denied'],['02','Records search']]],['RECEIVING PERSONNEL · 9 screens',[['10','Dashboard'],['11','Customers'],['12','New sample request'],['13','Payment & temporary receipt'],['14','Sample label'],['15','Release results'],['16','Request record & timeline'],['12a','New request – find customer'],['17','Notify customer (results ready)']]],['LABORATORY PERSONNEL · 6 screens',[['20','My worklist'],['21','Result entry (Phys/Chem)'],['22','Result entry (Bacteriological)'],['23','Result document (Phys/Chem analysis form)'],['24','Result document (Bacteriological test report)'],['25','Records search']]],['ADMINISTRATOR · 8 screens',[['30','Verification queue'],['31','Verify results'],['32','Income report'],['33','Audit log'],['34','Edit record (audited)'],['35','Users & roles'],['36','Tests by parameter report'],['37','Records search']]],['STATES & FEEDBACK · 4 screens',[['40','My worklist – empty'],['41','Records search – loading'],['42','Result entry – save failed'],['43','Session expired (any role)']],'st']];
+  return `<div class="index"><div class="ihero"><img class="seal" src="${SEAL}" width="56" height="56" alt="CPU seal"><div><h1>CPU Waterlab · Digital Management System</h1><p>Prototype index. Click any screen to open it. Every screen has an "All screens" button (bottom left) that brings you back here.</p></div></div>${G.map(([h,ts,c])=>`<div class="igroup ${c||''}"><h2>${h}</h2><div class="tiles">${ts.map(([n,l])=>`<a class="tile" href="#s${n}"><i>${n}</i>${l}</a>`).join('')}</div></div>`).join('')}</div>`}},
+'00':{t:'Sign in',r:()=>`<div class="signin"><div class="bp"><img class="seal" src="${SEAL}" width="104" height="104" alt="CPU seal"><h1>Waterlab Digital Management System</h1><div class="gold"></div><p>Central Philippine University · Water Analysis Laboratory. For authorized Waterlab personnel only.</p><div class="motto">SCIENTIA ET FIDES · EST. 1905</div></div>
+  <div class="sf"><form class="sc" id="signin"><h2>Sign in</h2><p>Use the account given to you by the Administrator.</p><div id="sierr">${banner('danger','Invalid username or password.')}</div>${field('Username','msantos',{id:'su'})}${field('Password','••••••••••',{type:'password',id:'sp'})}${btn('Sign in','primary','type="submit"','block')}<span class="note">After 5 failed attempts the account is locked for 15 minutes.</span></form>
+  <div class="shortcuts"><small>PROTOTYPE ONLY · SIGN IN AS</small><div class="right">${btn('Receiving','secondary',go('10'))}${btn('Laboratory','secondary',go('20'))}${btn('Administrator','secondary',go('30'))}</div></div></div></div>`},
+'01':{t:'Access denied',r:()=>shell('rec','Dashboard','Error state','Access denied',`<section class="card errcard"><div class="ic">!</div><h2>Access denied</h2><p>Your role (Receiving Personnel) is not allowed to change saved records. Nothing was changed, and this attempt was recorded in the audit log.</p>${btn('Back to dashboard','primary',go('10'))}</section>`)},
+'02':{t:'Records search',r:()=>searchScreen('rec','Records Search')},
+'10':{t:'Dashboard',r:dashboard},
+'11':{t:'Customers',r:()=>{
+  const rows=[['CUST-000123','Juan Dela Cruz','09171234567','2026-11-25'],['CUST-000088','Dela Cruz Farms Inc.','0332201188','2026-11-09'],['CUST-000041','Rosa Dela Cruz','09284441020','2026-10-14']].map(r=>`<tr><td class="nw">${r[0]}</td><td>${r[1]}</td><td class="nw">${r[2]}</td><td class="nw">${r[3]}</td><td class="num">${btn('New request','secondary',go('12'))}</td></tr>`);
+  return shell('rec','Customers','Receiving Personnel / Customers','Customers',`<div class="split" style="grid-template-columns:minmax(0,708fr) minmax(0,400fr)">`+
+   card('Find a customer',`<div class="row">${field('Customer name or customer ID','Dela Cruz')}${btn('Search','primary','data-act="search"')}</div><div style="margin-top:16px">${table(['Customer ID','Name','Contact no.','Last request',''],rows)}</div><p class="note">No match? FR-004 shows "No customer found" with a Create new customer button.</p>`)+
+   card('New customer',`<div style="display:flex;flex-direction:column;gap:14px">${banner('warn','A customer with this name and contact number already exists (CUST-000123). Open that record instead?')}${field('Customer name *','Juan Dela Cruz')}${field('Address *','Brgy. Tabuc Suba, Jaro, Iloilo City')}${field('Contact no. *','09171234567',{st:'err',help:'Matches an existing customer'})}<div class="right">${btn('Cancel','secondary','data-act="noop"')}${btn('Save customer','primary',go('12'))}</div></div>`)+`</div>`)}},
+'12':{t:'New sample request',r:()=>{
+  const [tot,items]=reqTotal(); const col=a=>a.map(p=>`<label class="chk"><input type="checkbox" data-param="${p[0]}" ${REQ.sel.has(p[0])?'checked':''} ${REQ.pc?'':'disabled'}><span>${p[0]}</span><span class="p">${peso(p[1])}</span></label>`).join('');
+  const noParam=REQ.pc&&REQ.sel.size===0, none=!REQ.pc&&!REQ.bact;
+  return shell('rec','New Sample Request','Receiving Personnel / New sample request','New sample request',
+  `<div class="stepper"><span class="step done"><i>✓</i>Customer</span><span class="ln"></span><span class="step on"><i>2</i>Sample &amp; tests</span><span class="ln"></span><span class="step"><i>3</i>Payment</span><span class="ln"></span><span class="step"><i>4</i>Label</span></div>
+  <div class="split" style="grid-template-columns:minmax(0,748fr) minmax(0,360fr)"><div class="grid">`+
+  card('Requested by',`<div style="display:flex;flex-direction:column;gap:12px">${banner('info','Details loaded from CUST-000123 (returning customer). Only the sample details need to be entered.')}<div class="row">${field('Name','Juan Dela Cruz',{st:'dis'})}${field('Company','—',{st:'dis'})}${field('Contact number','09171234567',{st:'dis'})}${field('TIN No.','123-456-789-000',{st:'dis'})}</div>${field('Address','Brgy. Tabuc Suba, Jaro, Iloilo City',{st:'dis'})}</div>`,btn('Change','ghost',go('12a')))+
+  card('Sample details',`<div style="display:flex;flex-direction:column;gap:12px"><div class="row">${field('Sample collected by *','Juan Dela Cruz')}${field('Sampling date *','2026-11-26')}${field('Sampling time *','07:45 AM')}</div><div class="row" style="align-items:flex-start">${field('Sampling point *','Faucet',{help:'Deep well, faucet, tank, etc.'})}${field('Address of sampling point *','Brgy. Tabuc Suba, Jaro, Iloilo City')}</div><div class="row" style="align-items:center"><span style="font-size:13px;font-weight:500">Type of ownership *</span><div class="seg" id="own">${['Private','Public','Local Waterworks','Industrial'].map(o=>`<button class="${REQ.own===o?'on':''}" data-own="${o}">${o}</button>`).join('')}</div></div></div>`)+
+  card('Analysis requested',`<div class="row" style="gap:24px"><label class="chk"><input type="checkbox" id="cpc" ${REQ.pc?'checked':''}>Physical/Chemical</label><label class="chk"><input type="checkbox" id="cbact" ${REQ.bact?'checked':''}>Bacteriological</label></div>
+   <div class="cap">PHYSICAL / CHEMICAL PARAMETERS (pick at least one)</div><div class="grid g2" style="gap:0 32px;${REQ.pc?'':'opacity:.5'}"><div>${col(PARAMS.slice(0,6))}</div><div>${col(PARAMS.slice(6))}</div></div>
+   <div class="cap">BACTERIOLOGICAL</div><label class="chk" style="${REQ.bact?'':'opacity:.5'}"><input type="checkbox" checked disabled><span>Bacteriological Test (with colony count): Total Coliform, Fecal Coliform, HPC</span><span class="p">₱600.00</span></label>`)+
+  `</div>`+card('Summary',kv('Request ID','Assigned when saved')+kv('Customer','CUST-000123')+kv('Received by','Maria Santos')+kv('Date / time received','2026-11-26 08:05 (auto)')+`<div class="hr"></div>`+(items.map(i=>kv(i[0],peso(i[1]))).join('')||'<p class="note">No tests selected yet.</p>')+`<div class="hr"></div><div class="total"><b>Total payable</b><strong>${peso(tot)}</strong></div><div style="display:flex;flex-direction:column;gap:10px">${(noParam||none)?banner('danger',none?'Select at least one analysis.':'Physical/Chemical is ticked but no parameter is selected.'):''}${btn('Save request','primary',(noParam||none)?'disabled':go('13'),'block')}${btn('Cancel','secondary',go('10'),'block')}<span class="note">The sample label can be printed only after the request is saved with valid test selections.</span></div>`,badge('Pending'))+`</div>`)}},
+'12a':{t:'New request – find customer',r:()=>{
+  const sug=[['AquaPure Refilling Station','Company · Contact: Rosa Lim · 0918 222 3344','CUST-000087','2026-10-30'],['Aquabest Water Station','Company · Contact: Jun Tan · 0917 555 0102','CUST-000112','2026-11-12'],['Aqualine Ice Plant','Company · Contact: Carlo Ong · 033 320 1188','CUST-000045','2026-09-04'],['Juan Dela Cruz (AquaHome)','Individual · 0917 123 4567','CUST-000123','2026-11-18']];
+  return shell('rec','New Sample Request','Receiving Personnel / New sample request','Step 1 · Find the customer',
+  card('Who is the request for?',`<p class="note" style="margin:-6px 0 14px;font-size:13px">Search by customer name, company or contact number. Pick an existing customer so their details fill in, or add a new one.</p><div class="row">${field('Customer name or company','aqua',{help:'Type at least 2 letters',id:'cq'})}<div style="padding-bottom:21px">${btn('+ Add new customer','secondary',go('11'))}</div></div><div class="sugg"><div class="h" id="sugh">4 matches for "aqua"</div><div id="sugl">${sug.map((s,i)=>`<div class="sitem ${i===0?'on':''}" data-name="${esc(s[0].toLowerCase())}"><div class="t"><b>${s[0]}</b><small>${s[1]}</small></div><span class="m">${s[2]}</span><span class="m">Last request ${s[3]}</span>${btn('Select',i===0?'primary':'secondary',go('12'))}</div>`).join('')}</div></div>`)+
+  card('Recent customers',`<div class="grid g3" style="gap:10px">${[['Juan Dela Cruz','Individual · 3 requests'],['AquaPure Refilling Station','Company · 12 requests'],["Iloilo Doctors' Hospital",'Company · 5 requests']].map(c=>`<button class="mini" ${go('12')}><b>${c[0]}</b><small>${c[1]}</small></button>`).join('')}</div>`))}},
+'13':{t:'Payment & temporary receipt',r:()=>shell('rec','Payments & Receipts','Receiving Personnel / New sample request','Payment',
+  `<div class="split" style="grid-template-columns:minmax(0,648fr) minmax(0,460fr)"><div class="grid">`+
+  card('Record payment',kv('Request ID','REQ-2026-0146')+kv('Customer','Juan Dela Cruz (CUST-000123)')+kv('Analysis requested','Phys/Chem (5 parameters) + Bacteriological')+kv('Payment status','Unpaid')+`<div class="hr"></div><div class="total"><b>Total payable</b><strong>₱1,300.00</strong></div><div style="display:flex;flex-direction:column;gap:14px">${field('Amount paid (₱) *','1,300.00',{id:'amt',hid:'amth',help:''})}<div class="row">${btn('Back','secondary',go('12'))}${btn('Record payment &amp; print receipt','primary','data-act="pay"')}</div></div>`,badge('Pending'))+
+  card('Validation example (FR-017)',field('Amount paid (₱) *','1,200.00',{st:'err',help:'Amount must equal the total payable: ₱1,300.00. No receipt was issued.'}))+`</div>
+  <section class="receipt">${paperHead('<b>CENTRAL PHILIPPINE UNIVERSITY</b><small style="font-weight:600;color:var(--text)">WATER ANALYSIS LABORATORY · COLLEGE OF ENGINEERING</small><small>Jaro, Iloilo City · Tel. (033) 329-1971 (to 79) local 1085</small><div class="rt">TEMPORARY RECEIPT</div>')}<div class="hr"></div>${kv('Receipt no.','TR-2026-00087')+kv('Date','2026-11-26 08:12')+kv('Request ID','REQ-2026-0146')+kv('Customer','Juan Dela Cruz')}<div class="hr"></div>${RECEIPT_ITEMS.map(i=>kv(i[0],peso(i[1]))).join('')}<div class="hr"></div><div class="kv" style="font-weight:700;color:var(--text)"><span style="color:var(--text)">Amount paid</span><span>₱1,300.00</span></div><p class="note" style="text-align:center">This is not an official receipt. The official receipt is issued by the CPU Business Office.</p><p class="note">Received by: Maria Santos</p></section></div>`)},
+'14':{t:'Sample label',r:()=>shell('rec','Sample Labels','Receiving Personnel / New sample request','Sample label',
+  `<div class="split" style="grid-template-columns:minmax(0,728fr) minmax(0,380fr)">`+
+  card('Label preview',`<div class="label"><div class="lt"><div class="lh"><span>CPU WATER ANALYSIS LABORATORY</span><span>LBL-2026-0146</span></div><div class="rq">REQ-2026-0146</div><div class="ln">Lab No. 26-675 (Phys/Chem) · Accession No. 26-2105 (Bact)</div><div style="font-size:13px">Faucet · Brgy. Tabuc Suba, Jaro · Sampled 2026-11-26 07:45 AM</div><div><span class="chip">Physical/Chemical</span><span class="chip">Bacteriological</span></div><div style="font-size:13px">Phys/Chem: pH · Turbidity · Total Solids/TDS · Total Hardness · Chloride</div><div style="font-size:13px">Bacteriological Test (with colony count): Total Coliform · Fecal Coliform · HPC</div></div><div class="qr">${qr()}Scan to open record</div></div>`,btn('Print label','primary','data-act="label"'))+
+  `<div class="grid">`+card('Label status',kv('Request','Saved')+kv('Test selections','Complete')+kv('Printed',ST.label?'Yes · 2026-11-26 08:14':'Not yet')+kv('Printed by',ST.label?'Maria Santos':'—'))+card('Blocked state example',`<div style="display:flex;flex-direction:column;gap:10px">${banner('danger',"Can't generate a label: this request isn't saved yet. Save the request first.")}${banner('danger',"Can't generate a label: Physical/Chemical is ticked but no parameter is selected.")}</div>`)+`</div></div>`)},
+'15':{t:'Release results',r:()=>{const sel=READY[ST.rel];const done=ST.released.has(sel[0]);
+  const rows=READY.map((r,i)=>`<tr class="click ${i===ST.rel?'sel':''}" data-rel="${i}"><td class="nw"><b>${r[0]}</b></td><td>${r[1]}</td><td class="nw">${r[2]}</td><td>${badge(ST.released.has(r[0])?'Released':'Ready for Release')}</td></tr>`);
+  const left=READY.length-ST.released.size;
+  return shell('rec','Release Results','Receiving Personnel','Release results',`<div class="split" style="grid-template-columns:minmax(0,688fr) minmax(0,420fr)">`+
+  card('Ready for Release',`<div class="row">${field('Request ID or customer name','',{ph:'Request ID or customer name'})}${btn('Find','secondary','data-act="search"')}</div><div style="margin-top:16px">${table(['Request ID','Customer','Verified on','Status'],rows)}</div>`,`<span class="meta">${left} request${left===1?'':'s'}</span>`)+
+  card('Record release',kv('Request ID',sel[0])+kv('Customer',sel[1])+kv('Test type',sel[3])+kv('Verified by','Ana Reyes (Administrator)')+kv('Verified on',sel[4])+`<div style="display:flex;flex-direction:column;gap:12px;margin-top:12px">${field('Recipient name *',done?'Pedro Dela Cruz':(ST.rel===0?'Pedro Dela Cruz':''),{id:'rcp',ph:'Name of the person claiming'})}${field('Release date and time','2026-11-26 10:42 (now)',{st:'dis'})}${done?banner('ok','Released to the recipient. The status is now Released.'):btn('Mark as Released','primary','data-act="release"','block')}${btn('Notify customer (SMS / email)','secondary',go('17'),'block')}${banner('info','Only requests in Ready for Release can be released. Other statuses are rejected and keep their status (FR-034).')}</div>`,badge(done?'Released':'Ready for Release'))+`</div>`)}},
+'16':{t:'Request record & timeline',r:()=>{const steps=[['Request received','Maria Santos · 2026-11-18 08:40'],['Payment recorded','TR-2026-00071 · ₱600.00 · Maria Santos · 08:44'],['Sample label printed','LBL-2026-0131 · Maria Santos · 08:46'],['Under Testing','Liza Ramos · 2026-11-18 09:30'],['Results submitted · For Verification','Liza Ramos · 2026-11-19 10:15'],['Verified · Ready for Release','Ana Reyes (Administrator) · 2026-11-24 15:20','gold'],['Customer notified','SMS to 0917•••4567 · 2026-11-24 15:21'],['Released','Waiting for the customer to claim','todo']];
+  return shell('rec','Records Search','Receiving Personnel / Records search','REQ-2026-0131',card('',facts([['Customer','Juan Dela Cruz'],['Analysis','Bacteriological'],['Accession No.','26-2097'],['Sampling point','Faucet'],['Received','2026-11-18 08:40'],['Status',badge('Ready for Release')]]))+
+  `<div class="split" style="grid-template-columns:minmax(0,1.7fr) minmax(0,1fr)">`+card('Status timeline',`<ul class="tl">${steps.map(s=>`<li class="${s[2]||''}"><b>${s[0]}</b><small>${s[1]}</small></li>`).join('')}</ul>`)+
+  `<div class="grid">`+card('Details',kv('Request ID','REQ-2026-0131')+kv('Customer ID','CUST-000123')+kv('Sample collected by','Juan Dela Cruz')+kv('Type of ownership','Private')+kv('Amount paid','₱600.00')+kv('Payment status','Forwarded'))+card('Documents',`<div style="display:flex;flex-direction:column;gap:10px">${btn('Temporary receipt','secondary',go('13'),'block')}${btn('Bacteriological test report','secondary',go('24'),'block')}${btn('Mark as Released','primary',go('15'),'block')}</div>`)+`</div></div>`)}},
+'17':{t:'Notify customer (results ready)',r:()=>shell('rec','Release Results','Receiving Personnel / Release results','Notify customer · REQ-2026-0131',`<div class="split" style="grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)">`+
+  card('Results are ready',kv('Customer','Juan Dela Cruz')+kv('Analysis','Bacteriological · Accession No. 26-2097')+kv('Verified','Ana Reyes (Administrator) · 2026-11-24 15:20')+`<div class="hr"></div><div style="display:flex;flex-direction:column;gap:10px"><b style="font-size:13px">Send by</b><label class="opt on"><input type="checkbox" checked data-opt><div><b>SMS</b><small>0917 123 4567 (from customer record)</small></div></label><label class="opt"><input type="checkbox" data-opt><div><b>Email</b><small>juan.delacruz@example.com (from customer record)</small></div></label><b style="font-size:13px">Message preview</b><div class="msg">CPU Water Analysis Laboratory: Good day, Juan Dela Cruz. The results for your water sample (Accession No. 26-2097) are ready for release. Please bring your temporary receipt TR-2026-00071 when you claim them. Office hours: Mon–Fri, 8 AM–5 PM.<div class="note" style="margin-top:6px">248 characters · 2 SMS parts</div></div><div class="right">${btn('Cancel','ghost',go('15'))}${btn('Send notification','primary','data-act="notify"')}</div></div>`,badge('Ready for Release'))+
+  `<div class="grid">`+card('Notification history',ST.notify?`<p class="note" style="margin:0">SMS to 0917•••4567 · 2026-11-26 10:44 · Maria Santos</p>`:`<p class="note" style="margin:0">No notifications sent yet for this request</p>`)+card('After sending',`<div style="display:flex;flex-direction:column;gap:10px">${banner('ok','✓ SMS sent to 0917•••4567 at 15:21. Logged in the request timeline.')}${banner('danger','SMS could not be sent (gateway timeout). Nothing was lost. Try again or call the customer.')}</div>`)+`</div></div>`)},
+'20':{t:'My worklist',r:()=>{const W=[['REQ-2026-0146','LBL-2026-0146','Kitchen faucet, main house','2026-11-26 07:45','pH, Turbidity, TDS, Hardness, Chloride','Pending'],['REQ-2026-0145','LBL-2026-0145','Storage tank','2026-11-26 06:30','Color, Turbidity, Hardness, pH, TDS','Under Testing'],['REQ-2026-0143','LBL-2026-0143','Well pump outlet','2026-11-25 14:10','pH, Alkalinity, Calcium, Magnesium','Under Testing'],['REQ-2026-0139','LBL-2026-0139','Refilling station tap','2026-11-25 09:00','pH, TDS','Pending'],['REQ-2026-0136','LBL-2026-0136','Pool inlet','2026-11-24 16:20','Turbidity, Chloride','Pending']];
+  const f=['All','Pending','Under Testing'][ST.wlSeg]; const rows=W.filter(r=>f==='All'||r[5]===f).map(r=>`<tr><td class="nw"><b>${r[0]}</b></td><td class="nw">${r[1]}</td><td>${r[2]}</td><td class="nw">${r[3]}</td><td>${r[4]}</td><td>${badge(r[5])}</td><td class="num">${r[5]==='Pending'?btn('Start testing','secondary','data-act="start"'):btn('Enter results','primary',go('21'))}</td></tr>`);
+  return shell('lab','My Worklist','Laboratory Personnel','My worklist',`<div class="row" style="align-items:center;gap:16px">${seg(['Physical/Chemical',['Bacteriological','22']],0)}<div class="seg" id="wlseg">${['All','Pending','Under Testing'].map((o,i)=>`<button class="${i===ST.wlSeg?'on':''}" data-wl="${i}">${o}</button>`).join('')}</div></div>`+
+  card('Samples to test',table(['Request ID','Label ID','Sampling point','Sampled','Parameters','Status',''],rows),`<span class="meta">${rows.length} samples · oldest first</span>`))}},
+'21':{t:'Result entry (Phys/Chem)',r:()=>resultEntry(false)},
+'22':{t:'Result entry (Bacteriological)',r:()=>shell('labb','Result Entry','Laboratory Personnel / My worklist','Result entry · Bacteriological',
+  card('',facts([['Request ID','REQ-2026-0144'],['Accession No.','26-2104'],['Sample source','Product water'],['Location','Faucet'],['Date / time collected','2026-11-25 10:00 AM'],['Status',badge('Under Testing')]]))+
+  card('Examination details',`<div class="row">${field('Date of examination *','2026-11-25')}${field('Physical characteristics *','Clear, no sediments',{style:'flex:2 1 260px'})}</div>`)+
+  card('Results of analysis',`<p class="note" style="margin:-6px 0 12px">Test method: Multiple Tube Fermentation Technique (MTFT), SMEWW 22nd Ed.</p>`+table(['Sample code','Total Coliform (MPN/100 mL) *','Fecal Coliform (MPN/100 mL) *','HPC (CFU/mL) *','Remarks *'],[`<tr><td><b>26-2104</b></td><td><input value="&lt;1.1"></td><td><input value="&lt;1.1"></td><td><input value="2"></td><td><input value="PASSED"></td></tr>`,`<tr><td style="color:var(--muted)">PNSDW 2020 / DOH AO 2020-0031</td><td style="color:var(--muted)">&lt;1.1</td><td style="color:var(--muted)">&lt;1.1</td><td style="color:var(--muted)">&lt;500</td><td style="color:var(--muted)">—</td></tr>`]))+
+  card('Parameter check (FR-025/026)',banner('ok','Total Coliform, Fecal Coliform and HPC all have results. Ready to submit.'))+
+  `<div class="right">${btn('Save draft','secondary','data-act="draft"')}${btn('Preview test report','secondary',go('24'))}${btn('Submit for verification','primary','data-act="submitb"')}</div>`)},
+'23':{t:'Result document (Phys/Chem)',r:()=>{const R=ST.result;const rw=(p,v,s,m)=>`<tr><td>${p}</td><td>${v}</td><td>${s}</td><td>${m}</td></tr>`;
+  return shell('lab','Result Entry','Laboratory Personnel / Result entry','Preview · Physical/Chemical Analysis Form',`<div class="row" style="align-items:center"><div style="flex:1">${banner('info','Draft preview. Final printing is available after the Administrator verifies the results (FR-032).')}</div>${btn('Back to result entry','secondary',go('21'))}</div>
+  <article class="paper">${paperHead('<h3>CENTRAL PHILIPPINE UNIVERSITY</h3><h4>WATER ANALYSIS LABORATORY</h4><p>Jaro, Iloilo City · Tel. Nos. (033) 3291971 (to 79) local 1085 · Fax No. (033) 320300 · chem_engg@cpu.edu.ph</p><div class="ttl">PHYSICAL/CHEMICAL ANALYSIS FORM</div>')}
+  <div class="mf"><div><span>To:</span> <b>Northside Ice Plant</b></div><div><span>Date Reported:</span> <b>2026-11-27</b></div><div><span>Date Collected:</span> <b>November 26, 2026 · 06:30 AM</b></div><div><span>Laboratory No.:</span> <b>26-674</b></div><div><span>Date Submitted:</span> <b>November 26, 2026 · 08:20 AM</b></div><div><span>Request ID:</span> <b>REQ-2026-0145</b></div><div><span>Source:</span> <b>Product</b></div><div><span>Address:</span> <b>Brgy. Tagbac, Jaro, Iloilo City</b></div></div>
+  ${table(['Parameter','Result','Phil. National Standards for Drinking Water','Method'],['<tr class="sec"><td colspan="4">PHYSICAL</td></tr>',rw('Color','NIL','5 TCU','Platinum-Cobalt'),rw('Turbidity','2.56 NTU','5 NTU','Turbidimeter'),'<tr class="sec"><td colspan="4">CHEMICAL</td></tr>',rw('Total Hardness','4 mg/L','300 mg/L','EDTA Titration'),rw('pH','6.65','6.5 – 8.5','Glass Electrode'),rw('Total Solids / TDS','11.1 ppm','500 mg/L','Gravimetric / TDS meter')])}
+  <div class="nf">— NOTHING FOLLOWS —</div><div class="sig"><div><small>Analyzed by:</small><div class="ln"></div><b>Dr. Dahlia H. Pescos</b><small>Analyst</small></div><div><small>Certified by:</small><div class="ln"></div><b>Mrs. Margarita E. Padernal</b><small>Head of Laboratory</small></div></div></article>`)}},
+'24':{t:'Result document (Bacteriological)',r:()=>shell('admin','Verification Queue','Administrator / Verify results','Print · Bacteriological Test Report',`<div class="row" style="align-items:center"><div style="flex:1">${banner('ok','Verified on 2026-11-26 by Ana Reyes. Ready to print.')}</div>${btn('Back','secondary',go('31'))}${btn('Print','primary','data-act="print"')}</div>
+  <article class="paper">${paperHead('<h3>CENTRAL PHILIPPINE UNIVERSITY</h3><h4 style="font-style:italic;font-weight:500">WATER ANALYSIS LABORATORY</h4><p>Lopez Jaena St. Jaro, Iloilo City · Tel. No. (033) 3291971 (to 79) local 1085</p><p style="color:var(--text);font-weight:600">DOH Accreditation 06-004-2628-LW-2 · Valid until 12/31/2028</p><div class="ttl">"TEST REPORT"</div>')}
+  <div class="mf"><div><span>Requesting Party/Client:</span> <b>Ana Lim</b></div><div><span>Date/Time Collection:</span> <b>11/25/26, 10:00 AM</b></div><div><span>Address:</span> <b>Brgy. Balabago, Jaro, Iloilo City</b></div><div><span>Date of Examination:</span> <b>11/25/26</b></div><div><span>Sample Source:</span> <b>Product Water</b></div><div><span>Date Reported:</span> <b>11/27/26</b></div><div><span>Location:</span> <b>Faucet</b></div><div><span>Date Release:</span> <b>—</b></div><div><span>Accession No.:</span> <b>26-2104</b></div><div><span>Request ID:</span> <b>REQ-2026-0144</b></div></div>
+  <p style="text-align:center;font-weight:700;margin:6px 0">BACTERIOLOGICAL EXAMINATION OF WATER SAMPLE</p><p style="margin:0 0 10px">Physical characteristics: Clear, No sediments.</p>
+  ${table(['Sample Code','Total Coliform (MPN/100 mL)','Fecal Coliform (MPN/100 mL)','HPC (CFU/mL)','Remarks'],['<tr><td>26-2104</td><td>&lt;1.1</td><td>&lt;1.1</td><td>2</td><td>PASSED</td></tr>','<tr><td>PNSDW 2020 / DOH AO 2020-0031</td><td>&lt;1.1</td><td>&lt;1.1</td><td>&lt;500</td><td></td></tr>'])}
+  <p class="note" style="margin-top:12px">Legend: Test Method Used = Multiple Tube Fermentation Technique (MTFT), Standard Method for the Examination of Water and Wastewater 22nd Ed, 2012 (SMEWW).</p><p class="note">NOTE:  •  Result of examination specifically related to samples received.   •  Test results shall not be reproduced except in full without the written approval of the examining laboratory.</p>
+  <div class="sig"><div><small>Analyst:</small><div class="ln"></div><b>Mr. Lakhvir Singh Sandhu, RMT</b><small>Micro-Analyst</small></div><div><small>Certified by:</small><div class="ln"></div><b>Mrs. Irene D. Salonga, RMT</b><small>Senior Micro-Analyst</small></div></div><p style="text-align:center;font-style:italic;color:var(--primary);margin:20px 0 0;font-size:12px">"Better safe than sorry, have your water tested"</p></article>`)},
+'25':{t:'Lab records search',r:()=>searchScreen('lab','Records Search')},
+'30':{t:'Verification queue',r:()=>{const Q=[['REQ-2026-0144','Bacteriological','Ana Lim','Liza Ramos','2026-11-26 09:05'],['REQ-2026-0117','Physical/Chemical','Dela Cruz Farms Inc.','Paolo Garcia','2026-11-25 16:40'],['REQ-2026-0112','Phys/Chem + Bacteriological','Northside Ice Plant','Paolo Garcia','2026-11-25 11:22'],['REQ-2026-0109','Bacteriological','Hillside Resort','Liza Ramos','2026-11-24 15:02']];
+  const st=(l,n,s,c)=>`<section class="card stat"><div class="l">${l}</div><div class="n" style="color:${c}">${n}</div><div class="s">${s}</div></section>`;
+  return shell('admin','Verification Queue','Administrator','Verification queue',`<div class="grid g3">${st('Awaiting verification',4,'Oldest: 2 days','var(--warning)')}${st('Verified today',6,'Moved to Ready for Release','var(--violet)')}${st('Returned for correction',1,'This week','var(--danger)')}</div>`+
+  card('Submitted results',table(['Request ID','Test type','Customer','Submitted by','Submitted','Status',''],Q.map(r=>`<tr><td class="nw"><b>${r[0]}</b></td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td class="nw">${r[4]}</td><td>${badge('For Verification')}</td><td class="num">${btn('Review','primary',go('31'))}</td></tr>`))))}},
+'31':{t:'Verify results',r:()=>shell('admin','Verification Queue','Administrator / Verification queue','Verify results · REQ-2026-0144',card('',facts([['Request ID','REQ-2026-0144'],['Customer','Ana Lim'],['Sampling point','Refilling station'],['Test type','Bacteriological'],['Submitted by','Liza Ramos']]))+
+  `<div class="split" style="grid-template-columns:minmax(0,1.8fr) minmax(0,1fr)"><div class="grid">`+card('Submitted results',table(['Sample code','Total Coliform (MPN/100 mL)','Fecal Coliform (MPN/100 mL)','HPC (CFU/mL)','Remarks'],['<tr><td><b>26-2104</b></td><td>&lt;1.1</td><td>&lt;1.1</td><td>2</td><td>PASSED</td></tr>','<tr><td style="color:var(--muted)">PNSDW 2020</td><td style="color:var(--muted)">&lt;1.1</td><td style="color:var(--muted)">&lt;1.1</td><td style="color:var(--muted)">&lt;500</td><td style="color:var(--muted)">—</td></tr>'])+`<p class="note" style="margin:12px 0 0">Physical characteristics: Clear, no sediments · Examined 2026-11-25 · Method: MTFT</p>`)+banner('ok','All requested parameters have complete results. No unrequested parameters.')+`</div>`+
+  card('Verification',kv('Verified by','Ana Reyes (Administrator)')+kv('Verification date','Set on approval')+`<div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">${btn('Approve results','primary','data-act="approve"','block')}${btn('Return for correction','danger','data-act="return"','block')}${btn('Print result document','secondary','disabled','block')}<span class="note">Final printing is available only after the results are verified (FR-032).</span></div>`,badge('For Verification'))+`</div>`)},
+'32':{t:'Income report',r:()=>{const wk=[['Nov 1 – 7',26,10900,6600],['Nov 8 – 14',31,13250,7200],['Nov 15 – 21',29,12400,6600],['Nov 22 – 30',31,11800,7200]];
+  const st=(l,n,s)=>`<section class="card stat"><div class="l">${l}</div><div class="n" style="color:var(--primary)">${n}</div><div class="s">${s}</div></section>`;
+  return shell('admin','Income Reports','Administrator / Reports','Income report',seg(['Income report',['Tests by parameter','36'],'Customer transactions'],0)+
+  card('',`<div class="row">${field('Period','Month  ▾')}${field('Month','November 2026')}<div class="right" style="flex:2 1 400px">${btn('Export PDF','secondary','data-act="export"')}${btn('Export Excel','secondary','data-act="export"')}${btn('Print','secondary','data-act="print"')}${btn('Generate report','primary','data-act="gen"')}</div></div>`)+
+  `<div class="grid g3">${st('Physical/Chemical','₱48,350.00','71 requests')}${st('Bacteriological','₱27,600.00','46 tests × ₱600')}${st('Combined total','₱75,950.00','Nov 1 – Nov 30, 2026')}</div>`+
+  card('Breakdown by week',table(['Week','Requests','Physical/Chemical','Bacteriological','Total'],wk.map(w=>`<tr><td class="nw">${w[0]}</td><td class="num">${w[1]}</td><td class="num">${peso(w[2])}</td><td class="num">${peso(w[3])}</td><td class="num"><b>${peso(w[2]+w[3])}</b></td></tr>`).concat(`<tr class="tot"><td>Total</td><td class="num">117</td><td class="num">₱48,350.00</td><td class="num">₱27,600.00</td><td class="num">₱75,950.00</td></tr>`),'fin')))}},
+'33':{t:'Audit log',r:()=>{const E=[['2026-11-26 10:31','areyes','Change','CUST-000123','ContactNo','09171234567','09189876543'],['2026-11-26 09:58','msantos','Access denied','CUST-000123','—','—','—'],['2026-11-26 07:12','(unknown)','Failed sign-in','—','—','—','—'],['2026-11-25 16:02','areyes','Change','REQ-2026-0117','SamplingPoint','Well #1','Deep well #1'],['2026-11-25 08:44','pgarcia','Failed sign-in','—','—','—','—']];
+  const rows=E.filter(e=>ST.audit==='All'||e[2]===ST.audit).map(e=>`<tr><td class="nw">${e[0]}</td><td>${e[1]}</td><td>${e[2]==='Change'?e[2]:`<span class="pill ${e[2]==='Access denied'?'bad':'off'}">${e[2]}</span>`}</td><td class="nw">${e[3]}</td><td>${e[4]}</td><td>${e[5]}</td><td>${e[6]}</td></tr>`);
+  return shell('admin','Audit Log','Administrator','Audit log',card('',`<div class="row"><div class="field" style="flex:2 1 340px"><label>Event type</label><div class="seg" id="aseg">${['All','Change','Failed sign-in','Access denied'].map(o=>`<button class="${ST.audit===o?'on':''}" data-aud="${o}">${o}</button>`).join('')}</div></div>${field('User','All users  ▾')}${field('From','2026-11-20')}${field('To','2026-11-26')}${btn('Filter','primary','data-act="search"')}</div>`)+
+  banner('info','Audit entries are read-only. They cannot be edited or deleted by anyone (FR-047).')+card('Entries',table(['Timestamp','User','Event','Record ID','Field','Old value','New value'],rows.length?rows:['<tr><td colspan="7" class="note">No entries for this filter.</td></tr>']),'<span class="meta">Newest first</span>'))}},
+'34':{t:'Edit record (audited)',r:()=>shell('admin','Edit Records','Administrator / Edit records','Edit customer · CUST-000123',banner('warn','You are editing a saved record. Every changed field is written to the audit log with its old and new value.')+
+  card('Customer details',`<div style="display:flex;flex-direction:column;gap:14px"><div class="row" style="align-items:flex-start">${field('Customer ID','CUST-000123',{st:'dis'})}${field('Customer name *','Juan Dela Cruz')}${field('Contact no. *','09189876543',{help:'Changed · was 09171234567',hc:'chg'})}</div>${field('Address *','Brgy. Tabuc Suba, Jaro, Iloilo City')}<div class="right">${btn('Cancel','secondary',go('33'))}${btn('Save changes','primary','data-act="confirm"')}</div></div>`)),
+  after:()=>openConfirm()},
+'35':{t:'Users & roles',r:()=>{const U=[['areyes','Ana Reyes','Administrator','All','Active','OK'],['msantos','Maria Santos','Receiving Personnel','Administrative','Active','OK'],['pgarcia','Paolo Garcia','Lab Personnel','Physical/Chemical','Active','Locked until 10:55'],['lramos','Liza Ramos','Lab Personnel','Bacteriological','Active','OK'],['jtorres','Jose Torres','Receiving Personnel','Administrative','Inactive','—']];
+  const M=[['Create customers, requests, payments, labels','y','n','n','y'],['Enter results (own section)','n','y','y','q'],['Verify results and print final document','n','n','n','y'],['Mark as Released','y','n','n','y'],['Edit saved records (audited)','n','n','n','y'],['Reports and audit log','n','n','n','y']];
+  const mk={y:'<span class="yes">✓</span>',n:'<span class="no">—</span>',q:'<span class="q">?</span>'};
+  return shell('admin','Users & Roles','Administrator','Users and roles',card('Accounts',table(['Username','Name','Role','Section','Account','Sign-in',''],U.map(u=>`<tr><td><b>${u[0]}</b></td><td>${u[1]}</td><td>${u[2]}</td><td>${u[3]}</td><td><span class="pill ${u[4]==='Active'?'ok':'off'}">${u[4]}</span></td><td>${u[5].startsWith('Locked')?`<span class="pill bad">${u[5]}</span>`:u[5]}</td><td class="num">${btn('Edit','ghost','data-act="noop"')}</td></tr>`)))+
+  card('Permission matrix (draft, pending OI-01)',table(['Action','Receiving','Lab (Phys/Chem)','Lab (Bacteriological)','Administrator'],M.map(m=>`<tr><td>${m[0]}</td>${m.slice(1).map(x=>`<td>${mk[x]}</td>`).join('')}</tr>`),'mtx')),btn('+ Add user','primary','data-act="noop"'))}},
+'36':{t:'Tests by parameter report',r:()=>{const T=[['pH',50,98,'24%'],['Turbidity',120,84,'21%'],['Total Solids / TDS',160,50,'12%'],['Total Hardness',200,41,'10%'],['Chloride',170,37,'9%'],['Color',50,30,'7%'],['Conductivity',50,22,'5%'],['Alkalinity',120,14,'3%'],['Dissolved Oxygen',160,12,'3%'],['Acidity',120,9,'2%'],['Calcium',250,6,'1%'],['Magnesium',350,6,'1%']];
+  const st=(l,n,s)=>`<section class="card stat"><div class="l">${l}</div><div class="n" style="color:var(--primary)">${n}</div><div class="s">${s}</div></section>`;
+  const rows=T.map(t=>`<tr><td>${t[0]}</td><td>Phys/Chem</td><td class="num">${peso(t[1])}</td><td class="num">${t[2]}</td><td class="num">${peso(t[1]*t[2])}</td><td><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;max-width:140px;height:8px;background:var(--bg);border-radius:4px"><div style="width:${parseInt(t[3])*4}%;height:100%;background:var(--primary);border-radius:4px"></div></div><span class="note" style="width:34px">${t[3]}</span></div></td></tr>`);
+  rows.push('<tr class="tot"><td>Phys/Chem subtotal</td><td></td><td></td><td class="num">409</td><td class="num">₱48,350.00</td><td>71 requests</td></tr>','<tr><td>Bacteriological Test</td><td>Bacteriological</td><td class="num">₱600.00</td><td class="num">46</td><td class="num">₱27,600.00</td><td class="note">One package price</td></tr>','<tr class="tot"><td>Total</td><td></td><td></td><td class="num">455</td><td class="num">₱75,950.00</td><td>Matches the Income report</td></tr>');
+  return shell('admin','Income Reports','Administrator / Reports','Tests by parameter · November 2026',seg([['Income report','32'],'Tests by parameter','Customer transactions'],1)+
+  card('',`<div class="row">${field('Period','Month  ▾')}${field('Month','November 2026')}${field('Section','All sections  ▾')}<div class="right" style="flex:2 1 340px">${btn('Export PDF','secondary','data-act="export"')}${btn('Export Excel','secondary','data-act="export"')}${btn('Generate report','primary','data-act="gen"')}</div></div>`)+
+  `<div class="grid g3">${st('Parameter tests (Phys/Chem)','409','71 requests · ₱48,350.00')}${st('Bacteriological tests','46','₱27,600.00 (₱600 package)')}${st('Most requested','pH','98 tests · in 2 of 3 Phys/Chem requests')}</div>`+
+  card('Tests and income by parameter',table(['Parameter','Section','Unit price','Tests','Income','Share of tests'],rows,'fin'),'<span class="meta">Unit prices from the lab price list</span>'))}},
+'37':{t:'Admin records search',r:()=>searchScreen('admin','Records Search')},
+'40':{t:'My worklist – empty',r:()=>shell('lab','My Worklist','Laboratory Personnel','My worklist',card('',`<div class="empty"><div class="ic">${icon('clipboard-list',26)}</div><h3>No samples assigned to you</h3><p>New samples appear here as soon as Receiving saves a request and prints its label. You can still look up older records.</p><div class="row" style="justify-content:center">${btn('Search records','secondary',go('25'))}${btn('Refresh','ghost',go('20'))}</div></div>`)+
+  card('Empty search result (pattern)',`<div class="row">${field('Search','REQ-2026-9999',{id:'es'})}</div><div class="empty" style="padding:28px 20px"><h3 style="font-size:16px">No records match "REQ-2026-9999"</h3><p>Check the request ID, or search by customer name, Laboratory No. or Accession No.</p>${btn('Clear search','secondary','data-act="clear"')}</div>`))},
+'41':{t:'Records search – loading',r:()=>{const r=()=>`<tr>${[90,140,80,110,0].map(w=>`<td>${w?`<div class="sk" style="width:${w}px"></div>`:'<div class="sk p"></div>'}</td>`).join('')}</tr>`;
+  return shell('rec','Records Search','Receiving Personnel','Records search',card('',`<div class="row">${field('Search by request ID, customer, Lab No. or Accession No.','Dela Cruz',{style:'flex:5 1 260px'})}${btn('Searching…','secondary','disabled')}</div><div class="tw" style="margin-top:16px"><table><thead><tr>${[70,90,60,70,60].map(w=>`<th><div class="sk" style="width:${w}px;height:8px"></div></th>`).join('')}</tr></thead><tbody>${r()+r()+r()+r()+r()+r()+r()}</tbody></table></div>`))}},
+'42':{t:'Result entry – save failed',r:()=>resultEntry(true),after:()=>toast('Save failed · Retrying in 10 s','err','Retry now','21')},
+'43':{t:'Session expired',r:()=>dashboard(),after:()=>{layer.innerHTML=`<div class="overlay"><div class="modal" style="align-items:center;text-align:center"><img class="seal" src="${SEAL}" width="48" height="48" alt="CPU seal"><h3>Your session has expired</h3><p>For security you were signed out after 30 minutes without activity. Sign in again to continue. Anything not yet saved on this page is kept as a draft.</p>${btn('Sign in again','primary',go('00'),'block')}</div></div>`}}
+};
+
+const root=document.getElementById('root'), layer=document.getElementById('layer'); let tt;
+function toast(msg,kind='',link='',to=''){clearTimeout(tt);const el=document.createElement('div');el.className='toast '+kind;el.innerHTML=`<span>${msg}</span>${link?`<a ${go(to)}>${link}</a>`:''}`;document.querySelectorAll('.toast').forEach(t=>t.remove());document.body.appendChild(el);if(!link)tt=setTimeout(()=>el.remove(),3200)}
+function openConfirm(){layer.innerHTML=`<div class="overlay" id="cfm"><div class="modal"><h3>Save this change?</h3><p>The following change will be saved and recorded in the audit log. If the audit entry cannot be saved, the change is cancelled.</p><div class="box">${kv('Field','Contact no.')+kv('Old value','09171234567')+kv('New value','09189876543')}</div>${field('Reason for change (optional)','Customer gave a new mobile number')}<div class="right">${btn('Go back','secondary','data-act="close"')}${btn('Confirm and save','primary','data-act="saved"')}</div></div></div>`}
+let cur='index';
+function render(keepScroll){
+  const h=location.hash.slice(1); cur=h.startsWith('s')&&S[h.slice(1)]?h.slice(1):'index';
+  const s=S[cur]; layer.innerHTML=''; document.querySelectorAll('.toast').forEach(t=>t.remove());
+  root.innerHTML=s.r(); document.title=(cur==='index'?'':cur+' '+s.t+' · ')+'LinTech UI prototype';
+  document.getElementById('allbtn').style.display=cur==='index'?'none':'';
+  if(s.after)s.after(); if(!keepScroll)window.scrollTo(0,0); bindLive();
+}
+const nav=id=>{const t='#s'+id; if(location.hash===t)render(); else location.hash=t};
+function bindLive(){
+  const f=document.getElementById('signin'); if(f)f.addEventListener('submit',e=>{e.preventDefault();const u=document.getElementById('su').value.trim().toLowerCase();const m={msantos:'10',jtorres:'10',pgarcia:'20',lramos:'22',areyes:'30'};if(m[u])nav(m[u]);else document.getElementById('sierr').innerHTML=banner('danger','Invalid username or password.')});
+  const cq=document.getElementById('cq'); if(cq)cq.addEventListener('input',()=>{const q=cq.value.trim().toLowerCase();let n=0;document.querySelectorAll('#sugl .sitem').forEach(it=>{const ok=q.length>=2&&it.dataset.name.includes(q);it.style.display=ok?'':'none';if(ok)n++});document.getElementById('sugh').textContent=q.length<2?'Type at least 2 letters':`${n} match${n===1?'':'es'} for "${cq.value.trim()}"`});
+  document.querySelectorAll('[data-res]').forEach(i=>i.addEventListener('change',()=>{ST.result[i.dataset.res]=i.value;render(true)}));
+}
+document.addEventListener('click',e=>{
+  const g=e.target.closest('[data-go]'); if(g&&!g.disabled){e.preventDefault();nav(g.dataset.go);return}
+  const p=e.target.closest('[data-param]'); if(p){p.checked?REQ.sel.add(p.dataset.param):REQ.sel.delete(p.dataset.param);render(true);return}
+  if(e.target.id==='cpc'){REQ.pc=e.target.checked;render(true);return} if(e.target.id==='cbact'){REQ.bact=e.target.checked;render(true);return}
+  const o=e.target.closest('[data-own]'); if(o){REQ.own=o.dataset.own;render(true);return}
+  const r=e.target.closest('[data-rel]'); if(r){ST.rel=+r.dataset.rel;render(true);return}
+  const w=e.target.closest('[data-wl]'); if(w){ST.wlSeg=+w.dataset.wl;render(true);return}
+  const au=e.target.closest('[data-aud]'); if(au){ST.audit=au.dataset.aud;render(true);return}
+  const op=e.target.closest('[data-opt]'); if(op){op.closest('.opt').classList.toggle('on',op.checked);return}
+  const a=e.target.closest('[data-act]'); if(!a)return; e.preventDefault(); const act=a.dataset.act;
+  if(act==='search')toast('Search updated');
+  else if(act==='draft')toast('Draft saved at 10:42 AM');
+  else if(act==='savefail')toast('Save failed · Retrying in 10 s','err','Retry now','21');
+  else if(act==='submitpc'){const miss=Object.keys(ST.result).filter(k=>ST.result[k].trim()==='');if(miss.length){toast(`Fill in ${miss.join(', ')} before submitting.`,'err');document.querySelector(`[data-res="${miss[0]}"]`)?.focus()}else{toast('Submitted for verification. Status: For Verification');setTimeout(()=>nav('20'),900)}}
+  else if(act==='submitb'){toast('Submitted for verification. Status: For Verification');setTimeout(()=>nav('20'),900)}
+  else if(act==='pay'){const v=parseFloat(document.getElementById('amt').value.replace(/,/g,''));const fld=document.getElementById('amt').closest('.field');const h=document.getElementById('amth');if(v!==1300){fld.classList.add('err');h.textContent='Amount must equal the total payable: ₱1,300.00. No receipt was issued.'}else{toast('Payment recorded · Temporary receipt TR-2026-00087 printed');setTimeout(()=>nav('14'),900)}}
+  else if(act==='label'){ST.label=true;render(true);toast('Label LBL-2026-0146 sent to the printer')}
+  else if(act==='release'){const v=document.getElementById('rcp').value.trim();if(!v){const fl=document.getElementById('rcp').closest('.field');fl.classList.add('err');if(!fl.querySelector('.help'))fl.insertAdjacentHTML('beforeend','<span class="help">Enter the name of the person claiming the results.</span>');return}ST.released.add(READY[ST.rel][0]);render(true);toast(`${READY[ST.rel][0]} marked as Released`)}
+  else if(act==='notify'){ST.notify=true;render(true);toast('✓ SMS sent to 0917•••4567. Logged in the request timeline.')}
+  else if(act==='start'){toast('Status changed to Under Testing');setTimeout(()=>nav('21'),800)}
+  else if(act==='approve'){toast('Results verified · Status: Ready for Release');setTimeout(()=>nav('24'),900)}
+  else if(act==='return'){toast('Returned to Liza Ramos for correction');setTimeout(()=>nav('30'),900)}
+  else if(act==='print')toast('Sent to the printer');
+  else if(act==='export')toast('Report exported');
+  else if(act==='gen')toast('Report generated for November 2026');
+  else if(act==='confirm')openConfirm();
+  else if(act==='close')layer.innerHTML='';
+  else if(act==='saved'){layer.innerHTML='';toast('Change saved and written to the audit log');setTimeout(()=>nav('33'),900)}
+  else if(act==='clear'){const i=document.getElementById('es');if(i){i.value='';i.focus()}}
+});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches('.nav a,[data-go]:not(button)')){nav(e.target.dataset.go)}if(e.key==='Escape'&&cur==='34')layer.innerHTML=''});
+window.addEventListener('hashchange',()=>render());
+render();
+}
+</script>
+</body>
+</html>
