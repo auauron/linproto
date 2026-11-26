@@ -251,8 +251,8 @@ const peso=n=>'₱'+n.toLocaleString('en-PH',{minimumFractionDigits:2,maximumFra
 /* roles, people, navigation */
 const NAV={
 rec:[['dashboard','Dashboard','10'],['users','Customers','11'],['file-plus','New Sample Request','12a'],['package-check','Release Results','15'],['search','Records Search','02']],
-lab:[['clipboard-list','My Worklist','20'],['flask','Result Entry','21']],
-labb:[['clipboard-list','My Worklist','20b'],['flask','Result Entry','22']],
+lab:[['clipboard-list','My Worklist','20']],
+labb:[['clipboard-list','My Worklist','20b']],
 admin:[['dashboard','Dashboard','29'],['shield-check','Verification Queue','30'],['search','Records Search','37'],['bar-chart','Income Reports','32'],['history','Audit Log','33'],['square-pen','Edit Records','34a'],['user-cog','Users & Roles','35']]};
 const WHO={rec:['MS','Maria Santos','Receiving Personnel'],lab:['PG','Paolo Garcia','Laboratory Personnel · Phys/Chem'],labb:['LR','Liza Ramos','Laboratory Personnel · Bacteriological'],admin:['AR','Ana Reyes','Administrator']};
 
@@ -301,7 +301,7 @@ function resultEntry(failed){
   const missing=Object.keys(R).filter(k=>R[k].trim()==='');
   const out=[];const t=parseFloat(R.Turbidity);if(t>5)out.push(`Turbidity ${R.Turbidity} NTU (limit 5 NTU)`);const h=parseFloat(R['Total Hardness']);if(h>300)out.push(`Total Hardness ${h} mg/L (limit 300 mg/L)`);const ph=parseFloat(R.pH);if(!isNaN(ph)&&(ph<6.5||ph>8.5))out.push(`pH ${ph} (limit 6.5 – 8.5)`);const td=parseFloat(R['Total Solids / TDS']);if(td>500)out.push(`Total Solids / TDS ${td} ppm (limit 500 mg/L)`);
   const done=5-missing.length;
-  return shell('lab','Result Entry','Laboratory Personnel / My worklist','Result entry · Physical/Chemical',
+  return shell('lab','My Worklist','My worklist / Samples to test','Result entry · Physical/Chemical',
    (failed?`<div class="banner danger" style="align-items:center"><div style="flex:1"><b>Couldn't save your results. Nothing you typed was lost.</b><small>The server did not respond (error 503 at 10:42 AM). Your entries are still on this page. Try again, or keep working and save later.</small></div>${btn('Try again','danger',go('21'))}</div>`:'')+
    card('',facts([['Request ID','PC-2026-145'],['Source','Product'],['Date / time collected','2026-11-26 06:30 AM'],['Date submitted','2026-11-26 08:20 AM'],['Status',badge('Under Testing')]]))+
    (missing.length?banner('danger',`${missing.length} required ${missing.length>1?'entries are':'entry is'} missing: ${missing.join(', ')}. Fill ${missing.length>1?'them':'it'} in before submitting for verification.`):'')+
@@ -396,14 +396,14 @@ const S={
 '20':{t:'My worklist · Phys/Chem',r:()=>worklist('lab')},
 '20b':{t:'My worklist (Bacteriological)',r:()=>worklist('labb')},
 '21':{t:'Result entry (Phys/Chem)',r:()=>resultEntry(false)},
-'22':{t:'Result entry (Bacteriological)',r:()=>shell('labb','Result Entry','Laboratory Personnel / My worklist','Result entry · Bacteriological',
+'22':{t:'Result entry (Bacteriological)',r:()=>shell('labb','My Worklist','My worklist / Samples to test','Result entry · Bacteriological',
   card('',facts([['Request ID','BC-2026-144'],['Sample source','Product water'],['Location','Faucet'],['Date / time collected','2026-11-25 10:00 AM'],['Status',badge('Under Testing')]]))+
   card('Examination details',`<div class="row">${field('Date of examination *','2026-11-25')}${field('Physical characteristics *','Clear, no sediments',{style:'flex:2 1 260px'})}</div>`)+
   card('Results of analysis',`<p class="note" style="margin:-6px 0 12px">Test method: Multiple Tube Fermentation Technique (MTFT), SMEWW 22nd Ed.</p>`+table(['Sample code','Total Coliform (MPN/100 mL) *','Fecal Coliform (MPN/100 mL) *','HPC (CFU/mL) *','Remarks *'],[`<tr><td><b>26-2104</b></td><td><input value="&lt;1.1"></td><td><input value="&lt;1.1"></td><td><input value="2"></td><td><input value="PASSED"></td></tr>`,`<tr><td style="color:var(--muted)">PNSDW 2020 / DOH AO 2020-0031</td><td style="color:var(--muted)">&lt;1.1</td><td style="color:var(--muted)">&lt;1.1</td><td style="color:var(--muted)">&lt;500</td><td style="color:var(--muted)">—</td></tr>`]))+
   card('Parameter check (FR-025/026)',banner('ok','Total Coliform, Fecal Coliform and HPC all have results. Ready to submit.'))+
   `<div class="right">${btn('Save draft','secondary','data-act="draft"')}${btn('Preview test report','secondary',go('24'))}${btn('Submit for verification','primary','data-act="submitb"')}</div>`)},
 '23':{t:'Result document (Phys/Chem)',r:()=>{const R=ST.result;const rw=(p,v,s,m)=>`<tr><td>${p}</td><td>${v}</td><td>${s}</td><td>${m}</td></tr>`;
-  return shell('lab','Result Entry','Laboratory Personnel / Result entry','Preview · Physical/Chemical Analysis Form',`<div class="row" style="align-items:center"><div style="flex:1">${banner('info','Draft preview. Final printing is available after the Administrator verifies the results (FR-032).')}</div>${btn('Back to result entry','secondary',go('21'))}</div>
+  return shell('lab','My Worklist','My worklist / Samples to test','Preview · Physical/Chemical Analysis Form',`<div class="row" style="align-items:center"><div style="flex:1">${banner('info','Draft preview. Final printing is available after the Administrator verifies the results (FR-032).')}</div>${btn('Back to result entry','secondary',go('21'))}</div>
   <article class="paper">${paperHead('<h3>CENTRAL PHILIPPINE UNIVERSITY</h3><h4>WATER ANALYSIS LABORATORY</h4><p>Jaro, Iloilo City · Tel. Nos. (033) 3291971 (to 79) local 1085 · Fax No. (033) 320300 · chem_engg@cpu.edu.ph</p><div class="ttl">PHYSICAL/CHEMICAL ANALYSIS FORM</div>')}
   <div class="mf"><div><span>To:</span> <b>Northside Ice Plant</b></div><div><span>Date Reported:</span> <b>2026-11-27</b></div><div><span>Date Collected:</span> <b>November 26, 2026 · 06:30 AM</b></div><div><span>Laboratory No.:</span> <b>PC-2026-145</b></div><div><span>Date Submitted:</span> <b>November 26, 2026 · 08:20 AM</b></div><div><span>Source:</span> <b>Product</b></div><div><span>Address:</span> <b>Brgy. Tagbac, Jaro, Iloilo City</b></div></div>
   ${table(['Parameter','Result','Phil. National Standards for Drinking Water','Method'],['<tr class="sec"><td colspan="4">PHYSICAL</td></tr>',rw('Color','NIL','5 TCU','Platinum-Cobalt'),rw('Turbidity','2.56 NTU','5 NTU','Turbidimeter'),'<tr class="sec"><td colspan="4">CHEMICAL</td></tr>',rw('Total Hardness','4 mg/L','300 mg/L','EDTA Titration'),rw('pH','6.65','6.5 – 8.5','Glass Electrode'),rw('Total Solids / TDS','11.1 ppm','500 mg/L','Gravimetric / TDS meter')])}
